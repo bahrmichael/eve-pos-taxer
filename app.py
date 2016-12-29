@@ -38,7 +38,7 @@ def get_deposit_total_today_all():
     return deposits
 
 
-def get_deposit_remaining_all():
+def get_balance_all():
     client = MongoProvider().provide()
 
     # aggregate deposits
@@ -75,7 +75,13 @@ def process_request(environ):
     if url_path == "deposit/all":
         return get_deposit_total_today_all()
     elif url_path == "balance/all":
-        return get_deposit_remaining_all()
+        return get_balance_all()
+    elif url_path == "balance/negative":
+        negative_balances = []
+        for balance in get_balance_all():
+            if balance['balance'] < 0:
+                negative_balances.append(balance)
+        return negative_balances
     elif url_path == "corp":
         body = ''  # b'' for consistency on Python 3.0
         try:

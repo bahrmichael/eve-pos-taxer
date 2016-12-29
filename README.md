@@ -95,7 +95,24 @@ Example call: `http://localhost:9000/balance/all?authkey=secure`
 [
     {
         "corpId": "92345678", 
-        "balance": -40, 
+        "balance": 40, 
+        "corpName": "My Other Corp"
+    }, 
+    { ... }
+]
+```
+
+### balance/negative
+
+Will list all balances from `balance/all` which are negative.
+
+Example call: `http://localhost:9000/balance/negative?authkey=secure`
+
+```
+[
+    {
+        "corpId": "92345678", 
+        "balance": -500, 
         "corpName": "My Other Corp"
     }, 
     { ... }

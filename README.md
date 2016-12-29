@@ -42,8 +42,8 @@ Each entry in `corporations` consists of the following JSON:
 
 * `corpId` contains the EvE ID of the corporation
 * `corpName` contains the name of the corporation to be displayed in the output, may be a nickname
-* `key` contains the key code for the EvE XML API.
-* `vCode` contains the verification code for the EvE XML API.
+* `key` contains the key code for the EvE XML API. The API must provide access to WalletJournal and StarbaseList (access mask: 1572864).
+* `vCode` contains the verification code for the EvE XML API. The API must provide access to WalletJournal and StarbaseList (access mask: 1572864).
 
 Each entry in `location_whitelist` consists of the following JSON:
 

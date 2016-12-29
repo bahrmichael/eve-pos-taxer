@@ -23,6 +23,8 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * `EVE_POS_AUTHKEY`: A string to authorize API requests (see `app.py#app(...)`).
 * `EVE_POS_TAX_RECIPIENT`: The character's name, to whom the corps pay their taxes. This variable is only needed for the script `loadTransactions.py`.
 
+Those variables must be set on the os level for running the scripts, and must be set in `variables.env` for running the API app.
+
 ### Database preparation
 
 The app requires the two collections `corporations` and `location_whitelist` to be filled. POSes which are not in  a system listed in `location_whitelist` will be tracked as well, but not included in the balance calculation.
@@ -59,7 +61,8 @@ Each entry in `location_whitelist` consists of the following JSON:
 2. `python scripts/loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
 3. `python scripts/buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
 4. `python scripts/buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
-5. `python app.py` to serve the REST API at the port set in `app.py#main` (default: 9000).
+5. `docker build . -t eve-pos-taxer` to build the api docker image.
+5. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
 
 ## API Access
 

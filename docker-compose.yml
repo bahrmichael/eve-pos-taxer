@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  api:
+    image: eve-pos-taxer
+    env_file:
+      - ./variables.env
+    ports:
+      - "9000:9000"

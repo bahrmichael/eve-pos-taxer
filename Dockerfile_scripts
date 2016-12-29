@@ -1,9 +1,10 @@
-FROM eve-pos-taxer
+FROM python:2.7-slim
 
-RUN pip install requests
+RUN pip install requests pymongo
 
 WORKDIR /home
 
+COPY classes /home/classes
 COPY runScripts.py /home/
 COPY scripts /home/scripts
 

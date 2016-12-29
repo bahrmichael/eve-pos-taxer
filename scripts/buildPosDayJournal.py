@@ -5,8 +5,7 @@ from pymongo.errors import BulkWriteError
 from classes.mongoProvider import MongoProvider
 
 
-def is_whitelisted(location_id):
-    client = MongoProvider().provide()
+def is_whitelisted(location_id, client):
     location = client.location_whitelist.find_one({"systemId": int(location_id)})
     return location is not None
 
@@ -22,7 +21,7 @@ def main():
     print "loading journal entries ..."
     journals = []
     for entry in pos_journal.find():
-        if is_whitelisted(entry['locationId']):
+        if is_whitelisted(entry['locationId'], client):
             journals.append(entry)
 
     print "aggregation journal entries ..."

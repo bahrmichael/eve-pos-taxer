@@ -1,7 +1,7 @@
-import loadPos
-import loadTransactions
-import buildPosDayJournal
-import buildDepositJournal
+from scripts import loadPos
+from scripts import loadTransactions
+from scripts import buildPosDayJournal
+from scripts import buildDepositJournal
 
 
 def main():

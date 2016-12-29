@@ -23,7 +23,7 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * `EVE_POS_AUTHKEY`: A string to authorize API requests (see `app.py#app(...)`).
 * `EVE_POS_TAX_RECIPIENT`: The character's name, to whom the corps pay their taxes. This variable is only needed for the script `loadTransactions.py`.
 
-Those variables must be set on the os level for running the scripts, and must be set in `variables.env` for running the API app.
+Those variables must be set on the os level for running the scripts (except `EVE_POS_AUTHKEY`), and must be set in `variables.env` for running the API app.
 
 ### Database preparation
 

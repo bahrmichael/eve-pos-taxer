@@ -24,7 +24,11 @@ def load_for_corp(pos_journal, key_id, v_code, corp_id):
     r = requests.get(url)
     data = r.content
     e = xml.etree.ElementTree.fromstring(data)
-    rows = e[1][0]
+    try:
+        rows = e[1][0]
+    except IndexError:
+        print "Could not access the pos api for corpId " + str(corp_id)
+        return
 
     for row in rows:
         location_id = row.get('locationID')

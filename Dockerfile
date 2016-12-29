@@ -1,6 +1,6 @@
 FROM python:2.7-slim
 
-RUN pip install json-logging-py pymongo
+RUN pip install pymongo
 
 WORKDIR /home
 

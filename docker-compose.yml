@@ -4,6 +4,6 @@ services:
   api:
     image: eve-pos-taxer
     env_file:
-      - ./variables.env
+      - ./variables-secure.env
     ports:
       - "9000:9000"

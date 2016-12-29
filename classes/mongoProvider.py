@@ -9,11 +9,15 @@ class MongoProvider:
         self.url = os.environ['EVE_POS_DB_URL']
         try:
             self.username = os.environ['EVE_POS_DB_USERNAME']
+            if self.username == "":
+                raise KeyError
         except KeyError:
             print "The environment variable EVE_POS_DB_USERNAME was not set."
             self.username = None
         try:
             self.password = os.environ['EVE_POS_DB_PASSWORD']
+            if self.password == "":
+                raise KeyError
         except KeyError:
             print "The environment variable EVE_POS_DB_PASSWORD was not set."
             self.password = None

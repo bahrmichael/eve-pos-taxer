@@ -11,7 +11,7 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * MongoDB (3.2.6 or newer)
 * Docker (1.12.3 or newer)
 * DockerCompose (1.8.1 or newer)
-* Python 2.7, pymongo, requests (both only needed for the scripts in the folder scripts)
+* Python 2.7, pymongo, requests (both only needed for the load and build scripts)
 
 ### Environment variables
 
@@ -57,10 +57,10 @@ Each entry in `location_whitelist` consists of the following JSON:
 
 ## Run
 
-1. `python scripts/loadPos.py` to track all poses which are online. Must be executed every day.
-2. `python scripts/loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
-3. `python scripts/buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
-4. `python scripts/buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
+1. `python loadPos.py` to track all poses which are online. Must be executed every day.
+2. `python loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
+3. `python buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
+4. `python buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
 5. `docker build . -t eve-pos-taxer` to build the api docker image.
 5. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
 

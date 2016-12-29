@@ -24,14 +24,11 @@ def main():
         if is_whitelisted(entry['locationId']):
             journals.append(entry)
 
-    pprint(journals)
-
     print "aggregation journal entries ..."
     aggregate = aggregate_journal(journals)
 
     print "writing aggregation entries ..."
     client.pos_day_journal.delete_many({})
-    pprint(aggregate)
     if len(aggregate) > 0:
         bulk = client.pos_day_journal.initialize_unordered_bulk_op()
         for element in aggregate:

@@ -57,10 +57,11 @@ Each entry in `location_whitelist` consists of the following JSON:
 
 ## Run
 
-1. `python loadPos.py` to track all poses which are online. Must be executed every day.
-2. `python loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
-3. `python buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
-4. `python buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
+1. `python scripts/runAll.py` to run all of the scripts below.
+    1. `loadPos.py` to track all poses which are online. Must be executed every day.
+    2. `loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
+    3. `buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
+    4. `buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
 5. `docker build . -t eve-pos-taxer` to build the api docker image.
 5. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
 

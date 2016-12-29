@@ -11,7 +11,7 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * MongoDB (3.2.6 or newer)
 * Docker (1.12.3 or newer)
 * DockerCompose (1.8.1 or newer)
-* Python 2.7, pymongo, requests (both only needed for the load and build scripts)
+* Python 2.7.10, pymongo, requests (both only needed for the load and build scripts)
 
 ### Environment variables
 

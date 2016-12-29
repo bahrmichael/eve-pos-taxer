@@ -8,4 +8,4 @@ COPY classes /home/classes
 COPY runScripts.py /home/
 COPY scripts /home/scripts
 
-ENTRYPOINT ["python runAll.py"]
+ENTRYPOINT ["python", "runScripts.py"]

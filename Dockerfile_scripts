@@ -1,0 +1,10 @@
+FROM eve-pos-taxer
+
+RUN pip install requests
+
+WORKDIR /home
+
+COPY runScripts.py /home/
+COPY scripts /home/scripts
+
+ENTRYPOINT ["python runAll.py"]

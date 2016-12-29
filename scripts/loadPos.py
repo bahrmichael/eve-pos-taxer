@@ -9,6 +9,7 @@ endpoint = "/corp/StarbaseList.xml.aspx"
 
 
 def main():
+    print "## Load Poses"
     print "establishing connection ..."
     client = MongoProvider().provide()
 

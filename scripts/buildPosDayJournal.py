@@ -12,6 +12,7 @@ def is_whitelisted(location_id):
 
 
 def main():
+    print "## Build PosDayJournal"
     print "establishing connection ..."
 
     client = MongoProvider().provide()

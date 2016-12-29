@@ -9,6 +9,7 @@ endpoint = "/corp/WalletJournal.xml.aspx"
 
 
 def main():
+    print "## Load transactions"
     print "establishing connection ..."
     client = MongoProvider().provide()
 

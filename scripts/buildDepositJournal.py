@@ -6,6 +6,7 @@ from classes.mongoProvider import MongoProvider
 
 
 def main():
+    print "## Build DepositJournal"
     print "establishing connection ..."
 
     client = MongoProvider().provide()

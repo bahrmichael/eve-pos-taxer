@@ -11,7 +11,10 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * MongoDB (3.2.6 or newer)
 * Docker (1.12.3 or newer)
 * DockerCompose (1.8.1 or newer)
-* Python 2.7.10, pymongo, requests (both only needed for the load and build scripts)
+
+### Optional
+
+Python 2.7.10 with pymongo and requests if you want to run the scripts outside of Docker.
 
 ### Environment variables
 
@@ -23,7 +26,7 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * `EVE_POS_AUTHKEY`: A string to authorize API requests (see `app.py#app(...)`).
 * `EVE_POS_TAX_RECIPIENT`: The character's name, to whom the corps pay their taxes. This variable is only needed for the script `loadTransactions.py`.
 
-Those variables must be set on the os level for running the scripts (except `EVE_POS_AUTHKEY`), and must be set in `variables.env` for running the API app.
+Those variables must all be set in `variables.env` for running the both the scripts image and the API image.
 
 ### Database preparation
 
@@ -57,13 +60,14 @@ Each entry in `location_whitelist` consists of the following JSON:
 
 ## Run
 
-1. `python scripts/runAll.py` to run all of the scripts below.
+1. `docker build . -t eve-pos-taxer` to build the api docker image.
+2. `docker build -f Dockerfile_scripts . -t eve-pos-taxer` to build the scripts docker image which depends on the api image.
+3. `docker run -it --env-file variables.env eve-pos-loader` to run all of the scripts below.
     1. `loadPos.py` to track all poses which are online. Must be executed every day.
     2. `loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
     3. `buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
     4. `buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
-5. `docker build . -t eve-pos-taxer` to build the api docker image.
-5. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
+4. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
 
 ## API Access
 

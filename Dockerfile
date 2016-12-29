@@ -2,10 +2,10 @@ FROM python:2.7-slim
 
 RUN pip install json-logging-py pymongo
 
-COPY classes/__init__.py /classes/__init__.py
-COPY classes/mongoFactory.py /classes/mongoFactory.py
-COPY classes/mongoProvider.py /classes/mongoProvider.py
-COPY app.py /
+WORKDIR /home
+
+COPY classes /home/classes
+COPY app.py /home
 
 EXPOSE 9000
 

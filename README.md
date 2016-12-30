@@ -71,6 +71,17 @@ Each entry in `location_whitelist` consists of the following JSON:
 
 ## API Access
 
+Adding the url parameter `csv=true` will provide a csv style response.
+
+Example call: `http://localhost:9000/deposit/all?authkey=secure&csv=true`
+
+```
+corpId;amount;corpName
+12345678;240000000.0;Some Corp
+87654321;420000000.0;Boom Boom
+
+```
+
 ### deposit/all
 
 Will list the sum of all taxes that were ever paid until today. Does not subtract pos fees.

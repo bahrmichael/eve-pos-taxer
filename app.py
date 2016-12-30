@@ -41,32 +41,13 @@ def get_deposit_total_today_all():
 def get_balance_all():
     client = MongoProvider().provide()
 
-    # aggregate deposits
-    balances = []
-    for deposit in client.deposit_journal.find():
-        existing_item = find_deposit(balances, deposit['corpId'])
-        if existing_item is None:
-            balances.append({'corpId': deposit['corpId'], 'balance': deposit['amount']})
-        else:
-            balances.remove(existing_item)
-            balances.append({'corpId': deposit['corpId'], 'balance': deposit['amount'] + existing_item['balance']})
+    result = []
+    for entry in client.balance_journal.find():
+        # remove the database id
+        del entry['_id']
+        result.append(entry)
 
-    for posday in client.pos_day_journal.find():
-        existing_item = find_deposit(balances, posday['corpId'])
-        additional_fee = posday['amount'] * -POSDAY_FEE
-        print additional_fee
-        if existing_item is None:
-            balances.append({'corpId': posday['corpId'], 'balance': additional_fee})
-        else:
-            balances.remove(existing_item)
-            balances.append({'corpId': posday['corpId'],
-                             'balance': existing_item['balance'] + additional_fee})
-
-    for deposit in balances:
-        corp_id = deposit['corpId']
-        deposit['corpName'] = client.corporations.find_one({'corpId': str(corp_id)})['corpName']
-
-    return balances
+    return result
 
 
 def process_request(environ):

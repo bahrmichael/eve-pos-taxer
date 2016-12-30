@@ -100,9 +100,27 @@ def app(environ, start_response):
         return "Access Denied"
     # process request
     else:
-        start_response('200 OK', [('Content-Type', 'application/json')])
         response_data = process_request(environ)
-        return json.dumps(response_data)
+        if "csv" in parameters and parameters['csv'] == ['true']:
+            start_response('200 OK', [('Content-Type', 'text/plain')])
+            return to_csv(response_data)
+        else:
+            start_response('200 OK', [('Content-Type', 'application/json')])
+            return json.dumps(response_data)
+
+
+def to_csv(response_data):
+    header_list = []
+    for k, v in response_data[0].iteritems():
+        header_list.append(str(k))
+    header = ";".join(header_list)
+    rows = [header]
+    for row in response_data:
+        row_list = []
+        for k, v in row.iteritems():
+            row_list.append(str(v))
+        rows.append(";".join(row_list))
+    return "\n".join(rows)
 
 
 if __name__ == '__main__':

@@ -19,9 +19,7 @@ class Balance:
 def get_negative_days(balance_array):
     reversed_balances = sorted(balance_array, key=lambda x: x.date, reverse=True)
     negative_count = 0
-    print len(reversed_balances)
     for balance in reversed_balances:
-        print balance
         if balance.amount < 0:
             negative_count += 1
     return negative_count

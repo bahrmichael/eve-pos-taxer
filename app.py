@@ -98,6 +98,17 @@ def app(environ, start_response):
     elif parameters['authkey'] != [os.environ['EVE_POS_AUTHKEY']]:
         start_response('403 ACCESS DENIED', [('Content-Type', 'text/html')])
         return "Access Denied"
+    elif environ.get('PATH_INFO', '').lstrip('/') == "":
+        start_response('200 OK', [('Content-Type', 'text/html')])
+        authkey = os.environ['EVE_POS_AUTHKEY']
+        return '''
+            <a href="deposit/all?authkey=%s">deposit/all</a>
+            <a href="deposit/all?authkey=%s&csv=true">deposit/all csv</a>
+            <a href="balance/all?authkey=%s">balance/all</a>
+            <a href="balance/all?authkey=%s&csv=true">balance/all csv</a>
+            <a href="balance/negative?authkey=%s">balance/negative</a>
+            <a href="balance/negative?authkey=%s&csv=true">balance/negative csv</a>
+        ''' % (authkey, authkey, authkey, authkey, authkey, authkey)
     # process request
     else:
         response_data = process_request(environ)

@@ -100,6 +100,7 @@ Example call: `http://localhost:9000/balance/all?authkey=secure`
 [
     {
         "corpId": "92345678", 
+        "negativeSinceDays": 1,
         "balance": 40, 
         "corpName": "My Other Corp"
     }, 
@@ -117,6 +118,7 @@ Example call: `http://localhost:9000/balance/negative?authkey=secure`
 [
     {
         "corpId": "92345678", 
+        "negativeSinceDays": 1,
         "balance": -500, 
         "corpName": "My Other Corp"
     }, 

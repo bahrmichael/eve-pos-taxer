@@ -26,7 +26,7 @@ def get_negative_days(balance_array):
 
 
 def get_corp_name(corp_id, mongo_client):
-    return mongo_client.corporations.find_one({'corpId': str(corp_id)})['corpName']
+    return mongo_client.corporations.find_one({'corpId': corp_id})['corpName']
 
 
 def main():
@@ -60,7 +60,7 @@ def main():
     print "adding tax payments ..."
     for transaction in transactions:
         date = transaction['date'].split(' ')[0]
-        corp_id = str(transaction['corpId'])
+        corp_id = transaction['corpId']
         for balanceEntry in corps[corp_id]:
             if balanceEntry.date == date:
                 balanceEntry.amount += transaction['amount']

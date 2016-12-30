@@ -19,7 +19,7 @@ def main():
 
 
 def load_for_corp(pos_journal, key_id, v_code, corp_id):
-    verification = "keyID=%s&vCode=%s" % (key_id, v_code)
+    verification = "keyID=%d&vCode=%s" % (key_id, v_code)
     url = "https://api.eveonline.com%s?%s" % (endpoint, verification)
     r = requests.get(url)
     data = r.content
@@ -33,12 +33,12 @@ def load_for_corp(pos_journal, key_id, v_code, corp_id):
     for row in rows:
         location_id = row.get('locationID')
         post = {
-            "posId": row.get('itemID'),
-            "typeId": row.get('typeID'),
+            "posId": long(row.get('itemID')),
+            "typeId": long(row.get('typeID')),
             "corpId": corp_id,
-            "state": row.get('state'),
-            "locationId": location_id,
-            "moonId": row.get('moonID'),
+            "state": int(row.get('state')),
+            "locationId": long(location_id),
+            "moonId": long(row.get('moonID')),
             "date": datetime.datetime.today().strftime('%Y-%m-%d')
         }
         found = pos_journal.find_one({"posId": post['posId'], "date": post['date']})

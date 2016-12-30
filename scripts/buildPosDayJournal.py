@@ -6,7 +6,7 @@ from classes.mongoProvider import MongoProvider
 
 
 def is_whitelisted(location_id, client):
-    location = client.location_whitelist.find_one({"systemId": int(location_id)})
+    location = client.location_whitelist.find_one({"systemId": long(location_id)})
     return location is not None
 
 

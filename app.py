@@ -33,7 +33,7 @@ def get_deposit_total_today_all():
 
     for deposit in deposits:
         corp_id = deposit['corpId']
-        deposit['corpName'] = client.corporations.find_one({'corpId': str(corp_id)})['corpName']
+        deposit['corpName'] = client.corporations.find_one({'corpId': corp_id})['corpName']
 
     return deposits
 
@@ -72,10 +72,10 @@ def process_request(environ):
         if length != 0:
             body = json.loads(environ['wsgi.input'].read(length))
             post = {
-                'key': body['key'],
-                'vCode': body['vCode'],
-                'corpId': body['corpId'],
-                'corpName': body['corpName']
+                'key': long(body['key']),
+                'vCode': str(body['vCode']),
+                'corpId': long(body['corpId']),
+                'corpName': str(body['corpName'])
             }
             database = MongoProvider().provide()
             database.corporations.insert_one(post)

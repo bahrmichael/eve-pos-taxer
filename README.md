@@ -36,9 +36,9 @@ Each entry in `corporations` consists of the following JSON:
 
 ```
 {
-    "corpId" : "12345678",
+    "corpId" : 12345678,
     "corpName" : "MYCORPORATION",
-    "key" : "1234567",
+    "key" : 1234567,
     "vCode" : "zusadf8bbBFAJFHASFHgfkashfG978fas"
 }
 ```
@@ -110,7 +110,7 @@ Example call: `http://localhost:9000/balance/all?authkey=secure`
 ```
 [
     {
-        "corpId": "92345678", 
+        "corpId": 92345678, 
         "negativeSinceDays": 1,
         "balance": 40, 
         "corpName": "My Other Corp"
@@ -128,7 +128,7 @@ Example call: `http://localhost:9000/balance/negative?authkey=secure`
 ```
 [
     {
-        "corpId": "92345678", 
+        "corpId": 92345678, 
         "negativeSinceDays": 1,
         "balance": -500, 
         "corpName": "My Other Corp"

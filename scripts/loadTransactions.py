@@ -19,7 +19,7 @@ def main():
 
 
 def load_for_corp(transaction_journal, key_id, v_code, corp_id):
-    verification = "keyID=%s&vCode=%s" % (key_id, v_code)
+    verification = "keyID=%d&vCode=%s" % (key_id, v_code)
     url = "https://api.eveonline.com%s?%s" % (endpoint, verification)
     r = requests.get(url)
     data = r.content

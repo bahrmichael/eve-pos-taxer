@@ -50,6 +50,20 @@ def get_balance_all():
     return result
 
 
+def get_all_errors():
+    errors = []
+    for error in MongoProvider().provide().error_log.find():
+        del error['_id']
+        errors.append(error)
+    return errors
+
+
+def delete_errors():
+    MongoProvider().provide().error_log.delete_many({})
+    # add en empty element so the csv parser doesn't break
+    return [{}]
+
+
 def process_request(environ):
     url_path = environ.get('PATH_INFO', '').lstrip('/')
     print url_path
@@ -63,23 +77,10 @@ def process_request(environ):
             if balance['balance'] < 0:
                 negative_balances.append(balance)
         return negative_balances
-    elif url_path == "corp":
-        body = ''  # b'' for consistency on Python 3.0
-        try:
-            length = int(environ.get('CONTENT_LENGTH', '0'))
-        except ValueError:
-            length = 0
-        if length != 0:
-            body = json.loads(environ['wsgi.input'].read(length))
-            post = {
-                'key': long(body['key']),
-                'vCode': str(body['vCode']),
-                'corpId': long(body['corpId']),
-                'corpName': str(body['corpName'])
-            }
-            database = MongoProvider().provide()
-            database.corporations.insert_one(post)
-        return {'persisted': body}
+    elif url_path == "errors":
+        return get_all_errors()
+    elif url_path == "errors/delete":
+        return delete_errors()
     return {'status': 'path ' + url_path + ' not found'}
 
 
@@ -101,14 +102,23 @@ def app(environ, start_response):
     elif environ.get('PATH_INFO', '').lstrip('/') == "":
         start_response('200 OK', [('Content-Type', 'text/html')])
         authkey = os.environ['EVE_POS_AUTHKEY']
-        return '''
-            <a href="deposit/all?authkey=%s">deposit/all</a>
+        error_count = len(get_all_errors())
+        result = '''
             <a href="deposit/all?authkey=%s&csv=true">deposit/all csv</a>
-            <a href="balance/all?authkey=%s">balance/all</a>
             <a href="balance/all?authkey=%s&csv=true">balance/all csv</a>
-            <a href="balance/negative?authkey=%s">balance/negative</a>
             <a href="balance/negative?authkey=%s&csv=true">balance/negative csv</a>
-        ''' % (authkey, authkey, authkey, authkey, authkey, authkey)
+        ''' % (authkey, authkey, authkey)
+
+        if error_count > 0:
+            result += '''
+                <br/>
+                <a href="errors?authkey=%s&csv=true">errors (%d) csv</a>
+                <a href="errors/delete?authkey=%s=true">clear errors</a>
+            ''' % (authkey, error_count, authkey)
+        else:
+            result += '<br/> 0 errors'
+        return result
+
     # process request
     else:
         response_data = process_request(environ)

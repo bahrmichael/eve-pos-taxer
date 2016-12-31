@@ -1,5 +1,5 @@
-import datetime
 import xml.etree.ElementTree
+from datetime import datetime
 
 import requests
 
@@ -15,10 +15,10 @@ def main():
 
     for corp in client.corporations.find():
         print "loading poses for corp " + corp['corpName']
-        load_for_corp(client.posjournal, corp['key'], corp['vCode'], corp['corpId'])
+        load_for_corp(client, corp['key'], corp['vCode'], corp['corpId'])
 
 
-def load_for_corp(pos_journal, key_id, v_code, corp_id):
+def load_for_corp(client, key_id, v_code, corp_id):
     verification = "keyID=%d&vCode=%s" % (key_id, v_code)
     url = "https://api.eveonline.com%s?%s" % (endpoint, verification)
     r = requests.get(url)
@@ -28,7 +28,16 @@ def load_for_corp(pos_journal, key_id, v_code, corp_id):
         rows = e[1][0]
     except IndexError:
         print "Could not access the pos api for corpId " + str(corp_id)
+        post = {
+            'timestamp': datetime.now(),
+            'message': 'Could not access the StarbaseList API',
+            'script': 'loadPos',
+            'corpId': corp_id
+        }
+        client.error_log.insert_one(post)
         return
+
+    pos_journal = client.posjournal
 
     for row in rows:
         location_id = row.get('locationID')
@@ -39,7 +48,7 @@ def load_for_corp(pos_journal, key_id, v_code, corp_id):
             "state": int(row.get('state')),
             "locationId": long(location_id),
             "moonId": long(row.get('moonID')),
-            "date": datetime.datetime.today().strftime('%Y-%m-%d')
+            "date": datetime.today().strftime('%Y-%m-%d')
         }
         found = pos_journal.find_one({"posId": post['posId'], "date": post['date']})
         if found is None:

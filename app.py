@@ -113,7 +113,7 @@ def app(environ, start_response):
             result += '''
                 <br/>
                 <a href="errors?authkey=%s&csv=true">errors (%d) csv</a>
-                <a href="errors/delete?authkey=%s=true">clear errors</a>
+                <a href="errors/delete?authkey=%s&csv=true">clear errors</a>
             ''' % (authkey, error_count, authkey)
         else:
             result += '<br/> 0 errors'

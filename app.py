@@ -1,6 +1,7 @@
 import json
 import os
 from cgi import parse_qs
+from datetime import datetime
 
 from classes.mongoProvider import MongoProvider
 
@@ -64,11 +65,24 @@ def delete_errors():
     return [{}]
 
 
+def get_poscount_all():
+    journal = MongoProvider().provide().pos_day_journal
+    corps = MongoProvider().provide().corporations
+    date = datetime.today().strftime('%Y-%m-%d')
+    result = []
+    for entry in journal.find({'date': date}):
+        corp = corps.find_one({'corpId': entry['corpId']})
+        result.append({'corp': corp['corpName'], 'amount': entry['amount'], 'date': date})
+    return result
+
+
 def process_request(environ):
     url_path = environ.get('PATH_INFO', '').lstrip('/')
     print url_path
     if url_path == "deposit/all":
         return get_deposit_total_today_all()
+    elif url_path == "poscount/all":
+        return get_poscount_all()
     elif url_path == "balance/all":
         return get_balance_all()
     elif url_path == "balance/negative":
@@ -105,9 +119,10 @@ def app(environ, start_response):
         error_count = len(get_all_errors())
         result = '''
             <a href="deposit/all?authkey=%s&csv=true">deposit/all csv</a>
+            <a href="poscount/all?authkey=%s&csv=true">poscount/all csv</a>
             <a href="balance/all?authkey=%s&csv=true">balance/all csv</a>
             <a href="balance/negative?authkey=%s&csv=true">balance/negative csv</a>
-        ''' % (authkey, authkey, authkey)
+        ''' % (authkey, authkey, authkey, authkey)
 
         if error_count > 0:
             result += '''

@@ -1,12 +1,11 @@
-import xml.etree.ElementTree
+import os
 from datetime import datetime
 
-import requests
-import os
-
+from classes.apiWrapper import ApiWrapper
 from classes.mongoProvider import MongoProvider
 
 endpoint = "/corp/WalletJournal.xml.aspx"
+recipient = os.environ['EVE_POS_TAX_RECIPIENT']
 
 
 def main():
@@ -19,15 +18,11 @@ def main():
         load_for_corp(client, corp['key'], corp['vCode'], corp['corpId'])
 
 
-def load_for_corp(client, key_id, v_code, corp_id):
-    verification = "keyID=%d&vCode=%s" % (key_id, v_code)
-    url = "https://api.eveonline.com%s?%s" % (endpoint, verification)
-    r = requests.get(url)
-    data = r.content
-    e = xml.etree.ElementTree.fromstring(data)
-    try:
-        rows = e[1][0]
-    except IndexError:
+def load_for_corp(mongo_client, key_id, v_code, corp_id):
+    transaction_journal = mongo_client.transactionjournal
+
+    api_result = ApiWrapper(endpoint, key_id, v_code).call(None)
+    if api_result is None:
         print "Could not access the wallet api for corpId " + str(corp_id)
         post = {
             'timestamp': datetime.now(),
@@ -35,14 +30,10 @@ def load_for_corp(client, key_id, v_code, corp_id):
             'script': 'loadTransactions',
             'corpId': corp_id
         }
-        client.error_log.insert_one(post)
+        mongo_client.error_log.insert_one(post)
         return
 
-    transaction_journal = client.transactionjournal
-
-    recipient = os.environ['EVE_POS_TAX_RECIPIENT']
-
-    for row in rows:
+    for row in api_result[0]:
         # check if it is a donation to a given player name
         if row.get('ownerName2') == recipient:
             post = {

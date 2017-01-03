@@ -1,8 +1,6 @@
-import xml.etree.ElementTree
 from datetime import datetime
 
-import requests
-
+from classes.apiWrapper import ApiWrapper
 from classes.mongoProvider import MongoProvider
 
 endpoint = "/corp/StarbaseList.xml.aspx"
@@ -18,15 +16,11 @@ def main():
         load_for_corp(client, corp['key'], corp['vCode'], corp['corpId'])
 
 
-def load_for_corp(client, key_id, v_code, corp_id):
-    verification = "keyID=%d&vCode=%s" % (key_id, v_code)
-    url = "https://api.eveonline.com%s?%s" % (endpoint, verification)
-    r = requests.get(url)
-    data = r.content
-    e = xml.etree.ElementTree.fromstring(data)
-    try:
-        rows = e[1][0]
-    except IndexError:
+def load_for_corp(mongo_client, key_id, v_code, corp_id):
+    pos_journal = mongo_client.posjournal
+
+    api_result = ApiWrapper(endpoint, key_id, v_code).call(None)
+    if api_result is None:
         print "Could not access the pos api for corpId " + str(corp_id)
         post = {
             'timestamp': datetime.now(),
@@ -34,12 +28,10 @@ def load_for_corp(client, key_id, v_code, corp_id):
             'script': 'loadPos',
             'corpId': corp_id
         }
-        client.error_log.insert_one(post)
+        mongo_client.error_log.insert_one(post)
         return
 
-    pos_journal = client.posjournal
-
-    for row in rows:
+    for row in api_result[0]:
         location_id = row.get('locationID')
         post = {
             "posId": long(row.get('itemID')),

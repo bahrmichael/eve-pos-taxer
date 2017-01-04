@@ -84,7 +84,7 @@ corpId;amount;corpName
 
 ### deposit/all
 
-Will list the sum of all taxes that were ever paid until today. Does not subtract pos fees.
+Will list the sum of all taxes that were ever paid until today for each corporation. Does not subtract pos fees.
 
 Example call: `http://localhost:9000/deposit/all?authkey=secure`
 
@@ -98,6 +98,57 @@ Example response:
         "corpName": "My Reactions"
     }, 
     { ... }
+]
+```
+
+### deposit/all/sum
+
+Will list the sum of all taxes that were ever paid until today for all corporations together. Does not subtract pos fees.
+
+Example call: `http://localhost:9000/deposit/all/sum?authkey=secure`
+
+Example response:
+
+```
+[
+    {
+        "totalDeposit": 4132000000.0,
+    }
+]
+```
+
+### poscount/all
+
+Will list the amount of POSes that were deployed on the recent day for each corporation.
+
+Example call: `http://localhost:9000/poscount/all?authkey=secure`
+
+Example response:
+
+```
+[
+    {
+        "date": "2017-01-04", 
+        "amount": 2, 
+        "corp": "My Corp"
+    },
+    { ... }
+]
+```
+
+### poscount/all/sum
+
+Will list the amount of POSes that were deployed on the recent day all corporations.
+
+Example call: `http://localhost:9000/poscount/all/sum?authkey=secure`
+
+Example response:
+
+```
+[
+    {
+        "totalPosCount": 102
+    }
 ]
 ```
 

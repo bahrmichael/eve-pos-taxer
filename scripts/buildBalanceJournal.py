@@ -30,6 +30,13 @@ def get_corp_name(corp_id, mongo_client):
     return result['corpName']
 
 
+def has_entry_for_date(corp_data, date):
+    for balanceEntry in corp_data:
+        if balanceEntry.date == date:
+            return "true"
+    return None
+
+
 def main():
     print "## Build BalanceJournal"
     print "establishing connection ..."
@@ -64,9 +71,12 @@ def main():
     for transaction in transactions:
         date = transaction['date'].split(' ')[0]
         corp_id = transaction['corpId']
-        for balanceEntry in corps[corp_id]:
-            if balanceEntry.date == date:
-                balanceEntry.amount += transaction['amount']
+        if has_entry_for_date(corps[corp_id], date):
+            for balanceEntry in corps[corp_id]:
+                if balanceEntry.date == date:
+                    balanceEntry.amount += transaction['amount']
+        else:
+            corps[corp_id].append(Balance(date, transaction['amount']))
 
     print "sorting by date ..."
     for corp_id in corps:

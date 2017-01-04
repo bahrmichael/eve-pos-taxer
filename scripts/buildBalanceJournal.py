@@ -22,6 +22,8 @@ def get_negative_days(balance_array):
     for balance in reversed_balances:
         if balance.amount < 0:
             negative_count += 1
+        else:
+            break
     return negative_count
 
 
@@ -96,8 +98,9 @@ def main():
         corp_data = corps[corp_id]
         last_balance = corp_data[-1].amount
         corp_name = get_corp_name(corp_id, client)
+        negative_days = get_negative_days(corp_data)
         result_entry = {'corpId': corp_id, 'balance': last_balance,
-                        'negativeSinceDays': get_negative_days(corp_data),
+                        'negativeSinceDays': negative_days,
                         'corpName': corp_name}
         result.append(result_entry)
 

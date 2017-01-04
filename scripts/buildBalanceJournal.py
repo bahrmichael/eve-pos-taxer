@@ -26,7 +26,8 @@ def get_negative_days(balance_array):
 
 
 def get_corp_name(corp_id, mongo_client):
-    return mongo_client.corporations.find_one({'corpId': corp_id})['corpName']
+    result = mongo_client.corporations.find_one({'corpId': corp_id})
+    return result['corpName']
 
 
 def main():
@@ -49,6 +50,8 @@ def main():
     print "preparing corp datasets ..."
     corps = {}
     for entry in posdays:
+        corps[entry['corpId']] = []
+    for entry in transactions:
         corps[entry['corpId']] = []
 
     print "loading posday expenses ..."
@@ -80,10 +83,15 @@ def main():
     result = []
     for corp_id in corps:
         # corpId and balance
-        last_balance = corps[corp_id][-1].amount
+        corp_data = corps[corp_id]
+        if len(corp_data) > 0:
+            last_balance = corp_data[-1].amount
+        else:
+            last_balance = 0
+        corp_name = get_corp_name(corp_id, client)
         result_entry = {'corpId': corp_id, 'balance': last_balance,
-                        'negativeSinceDays': get_negative_days(corps[corp_id]),
-                        'corpName': get_corp_name(corp_id, client)}
+                        'negativeSinceDays': get_negative_days(corp_data),
+                        'corpName': corp_name}
         result.append(result_entry)
 
     print "writing results ..."

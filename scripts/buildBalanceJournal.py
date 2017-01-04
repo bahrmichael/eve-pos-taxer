@@ -84,10 +84,7 @@ def main():
     for corp_id in corps:
         # corpId and balance
         corp_data = corps[corp_id]
-        if len(corp_data) > 0:
-            last_balance = corp_data[-1].amount
-        else:
-            last_balance = 0
+        last_balance = corp_data[-1].amount
         corp_name = get_corp_name(corp_id, client)
         result_entry = {'corpId': corp_id, 'balance': last_balance,
                         'negativeSinceDays': get_negative_days(corp_data),

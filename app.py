@@ -65,7 +65,7 @@ def delete_errors():
     return [{}]
 
 
-def get_poscount_all():
+def get_poscount_today_all():
     journal = MongoProvider().provide().pos_day_journal
     corps = MongoProvider().provide().corporations
     date = datetime.today().strftime('%Y-%m-%d')
@@ -76,13 +76,31 @@ def get_poscount_all():
     return result
 
 
+def get_poscount_today_all_sum():
+    total_count = 0
+    for poscount in get_poscount_today_all():
+        total_count += poscount['amount']
+    return [{'totalPosCount': total_count}]
+
+
+def get_deposit_all_sum():
+    total = 0
+    for deposit in get_deposit_total_today_all():
+        total += deposit['amount']
+    return [{'totalDeposit': total}]
+
+
 def process_request(environ):
     url_path = environ.get('PATH_INFO', '').lstrip('/')
     print url_path
     if url_path == "deposit/all":
         return get_deposit_total_today_all()
+    elif url_path == "deposit/all/sum":
+        return get_deposit_all_sum()
     elif url_path == "poscount/all":
-        return get_poscount_all()
+        return get_poscount_today_all()
+    elif url_path == "poscount/all/sum":
+        return get_poscount_today_all_sum()
     elif url_path == "balance/all":
         return get_balance_all()
     elif url_path == "balance/negative":
@@ -119,10 +137,12 @@ def app(environ, start_response):
         error_count = len(get_all_errors())
         result = '''
             <a href="deposit/all?authkey=%s&csv=true">deposit/all csv</a>
+            <a href="deposit/all/sum?authkey=%s&csv=true">deposit/all/sum csv</a>
             <a href="poscount/all?authkey=%s&csv=true">poscount/all csv</a>
+            <a href="poscount/all/sum?authkey=%s&csv=true">poscount/all/sum csv</a>
             <a href="balance/all?authkey=%s&csv=true">balance/all csv</a>
             <a href="balance/negative?authkey=%s&csv=true">balance/negative csv</a>
-        ''' % (authkey, authkey, authkey, authkey)
+        ''' % (authkey, authkey, authkey, authkey, authkey, authkey)
 
         if error_count > 0:
             result += '''

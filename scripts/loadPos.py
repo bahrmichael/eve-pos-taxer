@@ -12,7 +12,7 @@ class PosParser:
         print("## Load Poses")
         print("loading corporations ...")
 
-        for corp in self.db_find('corporations'):
+        for corp in MongoProvider().find('corporations'):
             print("loading poses for corp " + corp['corpName'])
             self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'])
 
@@ -27,9 +27,9 @@ class PosParser:
 
     def process_pos(self, corp_id, row):
         post = self.build_entry(corp_id, row)
-        found = self.db_find_one('pos_journal', {"posId": post['posId'], "date": post['date']})
+        found = MongoProvider().find_one('pos_journal', {"posId": post['posId'], "date": post['date']})
         if found is not None:
-            self.db_insert('pos_journal', post)
+            MongoProvider().insert('pos_journal', post)
             print(post['posId'])
 
     def build_entry(self, corp_id, row):
@@ -52,28 +52,13 @@ class PosParser:
             'script': 'loadPos',
             'corpId': corp_id
         }
-        self.db_insert('error_log', post)
+        MongoProvider().insert('error_log', post)
 
     def date_now(self):
         return datetime.now()
 
-    def db_find(self, collection):
-        return self.get_mongo_collection_cursor(collection).find()
-
-    def db_find_one(self, collection, parameters):
-        return self.get_mongo_collection_cursor(collection).find_one(parameters)
-
-    def db_insert(self, collection, post):
-        self.get_mongo_collection_cursor(collection).insert_one(post)
-
     def get_starbase_list(self, key_id, v_code):
-        return self.call_endpoint(self.endpoint, key_id, v_code, None)
-
-    def call_endpoint(self, endpoint, key_id, v_code, parameters):
-        return ApiWrapper(endpoint, key_id, v_code).call(parameters)
-
-    def get_mongo_collection_cursor(self, collection):
-        return MongoProvider().provide()[collection]
+        return ApiWrapper(self.endpoint, key_id, v_code).call(None)
 
 
 if __name__ == "__main__":

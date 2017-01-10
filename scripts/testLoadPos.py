@@ -3,6 +3,8 @@ from datetime import datetime
 from unittest import mock
 from unittest.mock import MagicMock
 
+from classes.apiWrapper import ApiWrapper
+from classes.mongoProvider import MongoProvider
 from scripts.loadPos import PosParser
 
 
@@ -17,7 +19,7 @@ class TestPosParser(unittest.TestCase):
         corps = [{'key': 1, 'vCode': 'v', 'corpId': 2, 'corpName': 't'}]
 
         # mocking
-        find_patcher = mock.patch.object(self.sut, 'db_find', return_value=corps)
+        find_patcher = mock.patch.object(MongoProvider, 'find', return_value=corps)
         find_patched = find_patcher.start()
         load_patcher = mock.patch.object(self.sut, 'load_for_corp')
         load_patched = load_patcher.start()
@@ -34,8 +36,8 @@ class TestPosParser(unittest.TestCase):
 
     def test_load_for_corp_api_error(self):
         # mocking
-        get_patcher = mock.patch.object(self.sut, 'get_starbase_list', return_value=None)
-        get_patched = get_patcher.start()
+        get_patcher = mock.patch.object(ApiWrapper, 'call', return_value=None)
+        api_patched = get_patcher.start()
         handle_patcher = mock.patch.object(self.sut, 'handle_error')
         handle_patched = handle_patcher.start()
         process_patcher = mock.patch.object(self.sut, 'process_pos')
@@ -45,8 +47,8 @@ class TestPosParser(unittest.TestCase):
         self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2)
 
         # verify
-        self.assertEqual(get_patched.call_count, 1)
-        get_patched.assert_called_with(1, 'v')
+        self.assertEqual(api_patched.call_count, 1)
+        api_patched.assert_called_with(None)
         self.assertEqual(handle_patched.call_count, 1)
         handle_patched.assert_called_with(2)
         self.assertEqual(process_patched.call_count, 0)
@@ -56,8 +58,8 @@ class TestPosParser(unittest.TestCase):
         api_result = [["api_data"]]
 
         # mocking
-        get_patcher = mock.patch.object(self.sut, 'get_starbase_list', return_value=api_result)
-        get_patched = get_patcher.start()
+        get_patcher = mock.patch.object(ApiWrapper, 'call', return_value=api_result)
+        api_patched = get_patcher.start()
         handle_patcher = mock.patch.object(self.sut, 'handle_error')
         handle_patched = handle_patcher.start()
         process_patcher = mock.patch.object(self.sut, 'process_pos')
@@ -67,8 +69,8 @@ class TestPosParser(unittest.TestCase):
         self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2)
 
         # verify
-        self.assertEqual(get_patched.call_count, 1)
-        get_patched.assert_called_with(1, 'v')
+        self.assertEqual(api_patched.call_count, 1)
+        api_patched.assert_called_with(None)
         self.assertEqual(handle_patched.call_count, 0)
         self.assertEqual(process_patched.call_count, 1)
         process_patched.assert_called_with(2, "api_data")
@@ -87,9 +89,9 @@ class TestPosParser(unittest.TestCase):
         row = self.MockRow(123456)
 
         # mocking
-        find_patcher = mock.patch.object(self.sut, 'db_find_one', return_value="found")
+        find_patcher = mock.patch.object(MongoProvider, 'find_one', return_value="found")
         find_patched = find_patcher.start()
-        insert_patcher = mock.patch.object(self.sut, 'db_insert')
+        insert_patcher = mock.patch.object(MongoProvider, 'insert')
         insert_patched = insert_patcher.start()
 
         # run
@@ -112,7 +114,7 @@ class TestPosParser(unittest.TestCase):
         }
 
         # mocking
-        insert_patcher = mock.patch.object(self.sut, 'db_insert')
+        insert_patcher = mock.patch.object(MongoProvider, 'insert')
         insert_patched = insert_patcher.start()
         date_patcher= mock.patch.object(self.sut, 'date_now', return_value=date)
         date_patched=date_patcher.start()

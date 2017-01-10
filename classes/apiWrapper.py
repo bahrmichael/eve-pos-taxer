@@ -19,7 +19,7 @@ class ApiWrapper:
         e = xml.etree.ElementTree.fromstring(data)
         result = e[1]
         if result.tag == 'error':
-            print "ERROR: " + result.text
+            print("ERROR: " + result.text)
             return None
         else:
             return result

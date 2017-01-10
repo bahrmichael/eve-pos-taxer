@@ -1,5 +1,6 @@
-from mongoFactory import MongoFactory
 import os
+
+from classes.mongoFactory import MongoFactory
 
 
 class MongoProvider:
@@ -12,14 +13,14 @@ class MongoProvider:
             if self.username == "":
                 raise KeyError
         except KeyError:
-            print "The environment variable EVE_POS_DB_USERNAME was not set."
+            print("The environment variable EVE_POS_DB_USERNAME was not set.")
             self.username = None
         try:
             self.password = os.environ['EVE_POS_DB_PASSWORD']
             if self.password == "":
                 raise KeyError
         except KeyError:
-            print "The environment variable EVE_POS_DB_PASSWORD was not set."
+            print("The environment variable EVE_POS_DB_PASSWORD was not set.")
             self.password = None
 
     def provide(self):

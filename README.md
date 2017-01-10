@@ -14,7 +14,7 @@ The balance is calculated of the corporation's deposit minus there amount of use
 
 ### Optional
 
-Python 2.7.10 with pymongo and requests if you want to run the scripts outside of Docker.
+Python 3.5.2 with `pymongo` and `requests` if you want to run the scripts outside of Docker.
 
 ### Environment variables
 
@@ -67,6 +67,7 @@ Each entry in `location_whitelist` consists of the following JSON:
     2. `loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
     3. `buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
     4. `buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
+    5. `buildBalanceJournal.py` to calculate the current balance of all corporations. Will drop and recreate the collection.
 4. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
 
 ## API Access
@@ -187,3 +188,5 @@ Example call: `http://localhost:9000/balance/negative?authkey=secure`
     { ... }
 ]
 ```
+
+### errors

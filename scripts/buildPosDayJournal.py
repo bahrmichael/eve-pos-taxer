@@ -6,28 +6,28 @@ from classes.mongoProvider import MongoProvider
 
 
 def is_whitelisted(location_id, client):
-    location = client.location_whitelist.find_one({"systemId": long(location_id)})
+    location = client.location_whitelist.find_one({"systemId": int(location_id)})
     return location is not None
 
 
 def main():
-    print "## Build PosDayJournal"
-    print "establishing connection ..."
+    print("## Build PosDayJournal")
+    print("establishing connection ...")
 
     client = MongoProvider().provide()
 
     pos_journal = client.posjournal
 
-    print "loading journal entries ..."
+    print("loading journal entries ...")
     journals = []
     for entry in pos_journal.find():
         if is_whitelisted(entry['locationId'], client):
             journals.append(entry)
 
-    print "aggregation journal entries ..."
+    print("aggregation journal entries ...")
     aggregate = aggregate_journal(journals)
 
-    print "writing aggregation entries ..."
+    print("writing aggregation entries ...")
     client.pos_day_journal.delete_many({})
     if len(aggregate) > 0:
         bulk = client.pos_day_journal.initialize_unordered_bulk_op()
@@ -39,7 +39,7 @@ def main():
         except BulkWriteError as bwe:
             pprint(bwe.details)
     else:
-        print "No aggregates were produced"
+        print("No aggregates were produced")
 
 
 def aggregate_journal(entries):

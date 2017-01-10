@@ -6,22 +6,22 @@ from classes.mongoProvider import MongoProvider
 
 
 def main():
-    print "## Build DepositJournal"
-    print "establishing connection ..."
+    print("## Build DepositJournal")
+    print("establishing connection ...")
 
     client = MongoProvider().provide()
 
     transaction_journal = client.transactionjournal
 
-    print "loading journal entries ..."
+    print("loading journal entries ...")
     journals = []
     for entry in transaction_journal.find():
         journals.append(entry)
 
-    print "aggregation journal entries ..."
+    print("aggregation journal entries ...")
     aggregate = aggregate_journal(journals)
 
-    print "writing aggregation entries ..."
+    print("writing aggregation entries ...")
     client.deposit_journal.delete_many({})
     bulk = client.deposit_journal.initialize_unordered_bulk_op()
     for element in aggregate:

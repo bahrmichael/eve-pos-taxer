@@ -40,15 +40,15 @@ def has_entry_for_date(corp_data, date):
 
 
 def main():
-    print "## Build BalanceJournal"
-    print "establishing connection ..."
+    print("## Build BalanceJournal")
+    print("establishing connection ...")
 
     client = MongoProvider().provide()
 
     transaction_journal = client.transactionjournal
     posday_journal = client.pos_day_journal
 
-    print "loading journal entries ..."
+    print("loading journal entries ...")
     transactions = []
     for entry in transaction_journal.find():
         transactions.append(entry)
@@ -56,20 +56,20 @@ def main():
     for entry in posday_journal.find():
         posdays.append(entry)
 
-    print "preparing corp datasets ..."
+    print("preparing corp datasets ...")
     corps = {}
     for entry in posdays:
         corps[entry['corpId']] = []
     for entry in transactions:
         corps[entry['corpId']] = []
 
-    print "loading posday expenses ..."
+    print("loading posday expenses ...")
     for posday in posdays:
         corp_id = posday['corpId']
         balance_entry = Balance(posday['date'], -1 * posday['amount'] * POS_DAY_FEE)
         corps[corp_id].append(balance_entry)
 
-    print "adding tax payments ..."
+    print("adding tax payments ...")
     for transaction in transactions:
         date = transaction['date'].split(' ')[0]
         corp_id = transaction['corpId']
@@ -80,18 +80,18 @@ def main():
         else:
             corps[corp_id].append(Balance(date, transaction['amount']))
 
-    print "sorting by date ..."
+    print("sorting by date ...")
     for corp_id in corps:
         corps[corp_id].sort(key=lambda x: x.date)
 
-    print "summing up balance entries ..."
+    print("summing up balance entries ...")
     for corp_id in corps:
         balance = 0
         for entry in corps[corp_id]:
             balance += entry.amount
             entry.amount = balance
 
-    print "building results ..."
+    print("building results ...")
     result = []
     for corp_id in corps:
         # corpId and balance
@@ -104,7 +104,7 @@ def main():
                         'corpName': corp_name}
         result.append(result_entry)
 
-    print "writing results ..."
+    print("writing results ...")
     client.balance_journal.delete_many({})
     bulk = client.balance_journal.initialize_unordered_bulk_op()
     for element in result:

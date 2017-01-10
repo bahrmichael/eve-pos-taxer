@@ -1,5 +1,9 @@
-FROM michaelbahr/eve-pos-service
+FROM python:3.5.2-slim
 
-ADD scripts/test*.py .
+RUN pip install requests pymongo
 
-ENTRYPOINT ["python", "-m", "unittest", "discover"]
+WORKDIR /home
+
+COPY classes /home/classes
+COPY runScripts.py /home/
+COPY scripts /home/scripts

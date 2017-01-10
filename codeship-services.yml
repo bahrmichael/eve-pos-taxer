@@ -8,9 +8,6 @@ service:
     image: michaelbahr/eve-pos-service
     dockerfile_path: Dockerfile
 
-foo:
-  image: python:3.5.2-slim
-
 parser_test:
   build:
     image: michaelbahr/eve-pos-parser-test

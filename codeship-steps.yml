@@ -1,3 +1,7 @@
+- service: parser_test
+  name: test
+  command: "python -m unittest discover"
+
 - service: parser
   type: push
   image_name: michaelbahr/eve-pos-parser

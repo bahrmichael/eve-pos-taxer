@@ -1,0 +1,5 @@
+FROM michaelbahr/eve-pos-service
+
+ADD scripts/test*.py .
+
+ENTRYPOINT ["python", "-m", "unittest", "discover"]

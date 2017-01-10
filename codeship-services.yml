@@ -13,6 +13,11 @@ parser_test:
     image: michaelbahr/eve-pos-parser-test
     dockerfile_path: Dockerfile_parser_test
 
+parser_test_coverage:
+  build:
+    image: michaelbahr/eve-pos-parser-test-coverage
+    dockerfile_path: Dockerfile_parser_test_coverage
+
 #service_test:
 #  build:
 #    image: michaelbahr/eve-pos-service-test

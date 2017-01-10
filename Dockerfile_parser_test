@@ -7,9 +7,3 @@ WORKDIR /home
 COPY classes /home/classes
 COPY runScripts.py /home/
 COPY scripts /home/scripts
-
-RUN pip install python-coveralls
-
-COPY .coveralls.yml /home
-COPY test_and_coverage.sh /home
-RUN chmod +x test_and_coverage.sh

@@ -1,6 +1,11 @@
 - service: parser_test
   name: test
-  command: "./test_and_coverage.sh"
+  command: "python -m unittest discover"
+
+- service: parser_test_coverage
+  name: test-coverage
+  tag: "master"
+  command: "./test_coverage.sh"
 
 - service: parser
   type: push

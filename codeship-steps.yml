@@ -1,0 +1,6 @@
+- type: parallel
+  steps:
+    - service: service
+      command: echo one
+    - service: service
+      command: echo two

@@ -1,0 +1,9 @@
+FROM python:3.5.2-slim
+
+RUN pip install requests pymongo
+
+WORKDIR /home
+
+COPY classes /home/classes
+COPY runScripts.py /home/
+COPY scripts /home/scripts

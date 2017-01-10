@@ -6,7 +6,8 @@ from unittest.mock import MagicMock
 from scripts.loadPos import PosParser
 
 
-class TestContractParser(unittest.TestCase):
+class TestPosParser(unittest.TestCase):
+
     def setUp(self):
         self.sut = PosParser()
         self.sut.get_mongo_collection_cursor = MagicMock(return_value=None)
@@ -113,8 +114,8 @@ class TestContractParser(unittest.TestCase):
         # mocking
         insert_patcher = mock.patch.object(self.sut, 'db_insert')
         insert_patched = insert_patcher.start()
-        date_patcher = mock.patch.object(self.sut, 'date_now', return_value=date)
-        date_patched = date_patcher.start()
+        date_patcher= mock.patch.object(self.sut, 'date_now', return_value=date)
+        date_patched=date_patcher.start()
 
         # run
         self.sut.handle_error(expected['corpId'])
@@ -123,7 +124,6 @@ class TestContractParser(unittest.TestCase):
         self.assertEqual(insert_patched.call_count, 1)
         insert_patched.assert_called_with('error_log', expected)
         self.assertEqual(date_patched.call_count, 1)
-
 
 if __name__ == '__main__':
     unittest.main()

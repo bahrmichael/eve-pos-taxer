@@ -5,23 +5,33 @@ from classes.mongoFactory import MongoFactory
 
 class MongoProvider:
     def __init__(self):
-        self.database = os.environ['EVE_POS_DB_NAME']
-        self.port = os.environ['EVE_POS_DB_PORT']
-        self.url = os.environ['EVE_POS_DB_URL']
+        self.database = self.init_property('EVE_POS_DB_NAME')
+        self.port = self.init_property('EVE_POS_DB_PORT')
+        self.url = self.init_property('EVE_POS_DB_URL')
+        self.username = self.init_property('EVE_POS_DB_USERNAME')
+        self.password = self.init_property('EVE_POS_DB_PASSWORD')
+
+    def init_property(self, env_var):
         try:
-            self.username = os.environ['EVE_POS_DB_USERNAME']
-            if self.username == "":
+            field = os.environ[env_var]
+            if field == "":
                 raise KeyError
+            return field
         except KeyError:
-            print("The environment variable EVE_POS_DB_USERNAME was not set.")
-            self.username = None
-        try:
-            self.password = os.environ['EVE_POS_DB_PASSWORD']
-            if self.password == "":
-                raise KeyError
-        except KeyError:
-            print("The environment variable EVE_POS_DB_PASSWORD was not set.")
-            self.password = None
+            print("The environment variable " + env_var + " was not set.")
+            return None
 
     def provide(self):
         return MongoFactory(self.url, self.port, self.database, self.username, self.password).build()[self.database]
+
+    def cursor(self, collection):
+        return self.provide()[collection]
+
+    def find(self, collection):
+        return self.cursor(collection).find()
+
+    def find_one(self, collection, parameters):
+        return self.cursor(collection).find_one(parameters)
+
+    def insert(self, collection, post):
+        self.cursor(collection).insert_one(post)

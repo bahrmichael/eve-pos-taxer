@@ -23,3 +23,6 @@ class ApiWrapper:
             return None
         else:
             return result
+
+    def call_api(self, endpoint, key_id, v_code, parameters):
+        return ApiWrapper(endpoint, key_id, v_code).call(parameters)

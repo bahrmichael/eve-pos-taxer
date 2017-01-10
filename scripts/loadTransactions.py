@@ -4,50 +4,65 @@ from datetime import datetime
 from classes.apiWrapper import ApiWrapper
 from classes.mongoProvider import MongoProvider
 
-endpoint = "/corp/WalletJournal.xml.aspx"
-recipient = os.environ['EVE_POS_TAX_RECIPIENT']
 
+class TransactionParser:
 
-def main():
-    print("## Load transactions")
-    print("establishing connection ...")
-    client = MongoProvider().provide()
+    endpoint = "/corp/WalletJournal.xml.aspx"
 
-    for corp in client.corporations.find():
-        print("processing corp %s" % corp['corpName'])
-        load_for_corp(client, corp['key'], corp['vCode'], corp['corpId'])
+    def main(self):
+        print("## Load transactions")
+        print("loading corporations ...")
 
+        for corp in MongoProvider().find('corporations'):
+            print("processing corp %s" % corp['corpName'])
+            self.process_corp(corp['key'], corp['vCode'], corp['corpId'])
 
-def load_for_corp(mongo_client, key_id, v_code, corp_id):
-    transaction_journal = mongo_client.transactionjournal
+    def process_corp(self, key_id, v_code, corp_id):
+        api_result = ApiWrapper(self.endpoint, key_id, v_code).call(None)
+        if api_result is None:
+            self.handle_error(corp_id)
+            return
 
-    api_result = ApiWrapper(endpoint, key_id, v_code).call(None)
-    if api_result is None:
-        print("Could not access the wallet api for corpId " + str(corp_id))
-        post = {
-            'timestamp': datetime.now(),
-            'message': 'Could not access the WalletJournal API',
-            'script': 'loadTransactions',
-            'corpId': corp_id
-        }
-        mongo_client.error_log.insert_one(post)
-        return
+        for row in api_result[0]:
+            # check if it is a donation to a given player name
+            self.process_transaction(corp_id, row)
 
-    for row in api_result[0]:
-        # check if it is a donation to a given player name
-        if row.get('ownerName2') == recipient:
-            post = {
-                "transactionId": int(row.get('refID')),
-                "date": row.get('date'),
-                "corpId": int(corp_id),
-                "amount": -1 * float(row.get('amount'))
-            }
-            found = transaction_journal.find_one({"transactionId": post['transactionId']})
+    def process_transaction(self, corp_id, row):
+        if self.is_target_recipient(row):
+            post = self.build_entry(corp_id, row)
+            found = MongoProvider().find_one('transaction_journal', {"transactionId": post['transactionId']})
             if found is None:
-                transaction_journal.insert_one(post)
+                MongoProvider().insert('transaction_journal', post)
                 print(str(post['transactionId']) + " added")
             else:
                 print(str(post['transactionId']) + " already exists")
 
+    def build_entry(self, corp_id, row):
+        return {
+            "transactionId": int(row.get('refID')),
+            "date": row.get('date'),
+            "corpId": int(corp_id),
+            "amount": -1 * float(row.get('amount'))
+        }
+
+    def is_target_recipient(self, row):
+        return row.get('ownerName2') == self.get_tax_recipient()
+
+    def handle_error(self, corp_id):
+        print("Could not access the wallet api for corpId " + str(corp_id))
+        post = {
+            'timestamp': self.date_now(),
+            'message': 'Could not access the WalletJournal API',
+            'script': 'loadTransactions',
+            'corpId': corp_id
+        }
+        MongoProvider().insert('error_log', post)
+
+    def date_now(self):
+        return datetime.now()
+
+    def get_tax_recipient(self):
+        return os.environ['EVE_POS_TAX_RECIPIENT']
+
 if __name__ == "__main__":
-    main()
+    TransactionParser().main()

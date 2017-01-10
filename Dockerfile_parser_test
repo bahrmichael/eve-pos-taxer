@@ -7,3 +7,4 @@ WORKDIR /home
 COPY classes /home/classes
 COPY runScripts.py /home/
 COPY scripts /home/scripts
+COPY tests /home/tests

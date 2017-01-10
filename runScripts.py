@@ -1,15 +1,14 @@
-from scripts import loadPos
-from scripts import loadTransactions
-from scripts import buildPosDayJournal
-from scripts import buildDepositJournal
 from scripts import buildBalanceJournal
+from scripts import buildDepositJournal
+from scripts.buildPosDayJournal import PosDayJournalBuilder
 from scripts.loadPos import PosParser
+from scripts.loadTransactions import TransactionParser
 
 
 def main():
     PosParser().main()
-    loadTransactions.main()
-    buildPosDayJournal.main()
+    TransactionParser().main()
+    PosDayJournalBuilder().main()
     buildDepositJournal.main()
     buildBalanceJournal.main()
 

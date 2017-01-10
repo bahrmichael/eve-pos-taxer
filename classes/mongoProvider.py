@@ -35,3 +35,9 @@ class MongoProvider:
 
     def insert(self, collection, post):
         self.cursor(collection).insert_one(post)
+
+    def delete_all(self, collection):
+        self.cursor(collection).delete_many({})
+
+    def start_bulk(self, collection):
+        return self.cursor(collection).initialize_unordered_bulk_op()

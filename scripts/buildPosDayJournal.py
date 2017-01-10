@@ -5,68 +5,71 @@ from pymongo.errors import BulkWriteError
 from classes.mongoProvider import MongoProvider
 
 
-def is_whitelisted(location_id, client):
-    location = client.location_whitelist.find_one({"systemId": int(location_id)})
-    return location is not None
+class PosDayJournalBuilder:
 
+    def main(self):
+        print("## Build PosDayJournal")
 
-def main():
-    print("## Build PosDayJournal")
-    print("establishing connection ...")
+        print("loading journal entries ...")
+        journals = self.find_whitelisted_entries()
 
-    client = MongoProvider().provide()
+        print("aggregation journal entries ...")
+        aggregate = self.aggregate_journal(journals)
 
-    pos_journal = client.posjournal
+        print("writing aggregation entries ...")
+        if len(aggregate) > 0:
+            MongoProvider().delete_all('pos_day_journal')
+            self.write_entries(aggregate)
+        else:
+            print("No aggregates were produced")
 
-    print("loading journal entries ...")
-    journals = []
-    for entry in pos_journal.find():
-        if is_whitelisted(entry['locationId'], client):
-            journals.append(entry)
-
-    print("aggregation journal entries ...")
-    aggregate = aggregate_journal(journals)
-
-    print("writing aggregation entries ...")
-    client.pos_day_journal.delete_many({})
-    if len(aggregate) > 0:
-        bulk = client.pos_day_journal.initialize_unordered_bulk_op()
+    def write_entries(self, aggregate):
+        bulk = MongoProvider().start_bulk('pos_day_journal')
         for element in aggregate:
             bulk.insert(element)
-
         try:
             bulk.execute()
         except BulkWriteError as bwe:
             pprint(bwe.details)
-    else:
-        print("No aggregates were produced")
 
+    def find_whitelisted_entries(self):
+        journals = []
+        for entry in MongoProvider().find('pos_journal'):
+            if self.is_whitelisted(entry['locationId']):
+                journals.append(entry)
+        return journals
 
-def aggregate_journal(entries):
-    aggregated = []
-    for entry in entries:
+    def is_whitelisted(self, location_id):
+        location = MongoProvider().find_one('location_whitelist', {"systemId": int(location_id)})
+        return location is not None
+
+    def aggregate_journal(self, entries):
+        aggregated = []
+        for entry in entries:
+            item = self.process_entry(aggregated, entry)
+            aggregated.append(item)
+
+        return aggregated
+
+    def process_entry(self, aggregated, entry):
         date_ = entry['date'].split(' ')[0]
         corp_id_ = entry['corpId']
-        existing_item = find_existing(date_, aggregated, corp_id_)
+
+        existing_item = self.find_in_list(date_, corp_id_, aggregated)
+
         if existing_item is None:
-            item = {'date': date_, 'corpId': corp_id_, 'amount': 1}
-            aggregated.append(item)
+            amount = 1
         else:
-            aggregated.remove(existing_item)
-            item = {'date': date_, 'corpId': corp_id_,
-                    'amount': existing_item['amount'] + 1}
-            aggregated.append(item)
+            amount = existing_item['amount'] + 1
 
-    return aggregated
+        return {'date': date_, 'corpId': corp_id_, 'amount': amount}
 
-
-def find_existing(date, entries, corp_id):
-    for entry in entries:
-        if entry['date'] == date and entry['corpId'] == corp_id:
-            return entry
-
-    return None
+    def find_in_list(self, date, corp_id, entries):
+        for entry in entries:
+            if entry['date'] == date and entry['corpId'] == corp_id:
+                return entry
+        return None
 
 
 if __name__ == "__main__":
-    main()
+    PosDayJournalBuilder().main()

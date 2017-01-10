@@ -3,10 +3,11 @@ from scripts import loadTransactions
 from scripts import buildPosDayJournal
 from scripts import buildDepositJournal
 from scripts import buildBalanceJournal
+from scripts.loadPos import PosParser
 
 
 def main():
-    loadPos.main()
+    PosParser().main()
     loadTransactions.main()
     buildPosDayJournal.main()
     buildDepositJournal.main()

@@ -12,3 +12,5 @@ RUN pip install python-coveralls
 RUN pip install coverage
 
 COPY .coveralls.yml /home
+COPY test_and_coverage.sh /home
+RUN chmod +x test_and_coverage.sh

@@ -1,6 +1,6 @@
 - service: parser_test
   name: test
-  command: "coverage run -m unittest discover && coveralls"
+  command: "./test_and_coverage.sh"
 
 - service: parser
   type: push

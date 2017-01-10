@@ -92,7 +92,7 @@ def get_deposit_all_sum():
 
 def process_request(environ):
     url_path = environ.get('PATH_INFO', '').lstrip('/')
-    print url_path
+    print(url_path)
     if url_path == "deposit/all":
         return get_deposit_total_today_all()
     elif url_path == "deposit/all/sum":
@@ -185,5 +185,5 @@ if __name__ == '__main__':
     port = 9000
     srv = make_server('0.0.0.0', port, app)
 
-    print "listening on port " + str(port)
+    print("listening on port " + str(port))
     srv.serve_forever()

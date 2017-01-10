@@ -14,7 +14,7 @@ def is_favicon(environ):
 
 def find_deposit(deposits, corp_id):
     for entry in deposits:
-        if entry['corpId'] == long(corp_id):
+        if entry['corpId'] == int(corp_id):
             return entry
     return None
 

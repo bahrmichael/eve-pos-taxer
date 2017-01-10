@@ -1,6 +1,6 @@
 - service: parser_test
   name: test
-  command: "python -m unittest discover"
+  command: "coverage run -m unittest discover && coveralls"
 
 - service: parser
   type: push

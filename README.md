@@ -1,6 +1,7 @@
 # Eve Pos Taxer
 
 [ ![Codeship Status for bahrmichael/eve-pos-taxer](https://codeship.com/projects/0b42a360-b955-0134-447f-7a5b9e1f9d50/status?branch=master)](https://codeship.com/projects/194949)
+[![Coverage Status](https://coveralls.io/repos/github/bahrmichael/eve-pos-taxer/badge.svg?branch=master)](https://coveralls.io/github/bahrmichael/eve-pos-taxer?branch=master)
 
 A tool which monitors corporations for POSes in whitelisted systems as well as their tax payment to a defined character.
 

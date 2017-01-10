@@ -2,7 +2,7 @@ version: '2'
 
 services:
   api:
-    image: eve-pos-taxer
+    image: eve-pos-service
     env_file:
       - ./variables.env
     ports:

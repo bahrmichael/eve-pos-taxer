@@ -1,0 +1,22 @@
+parser:
+  build:
+    image: michaelbahr/eve-pos-parser
+    dockerfile_path: Dockerfile_parser
+
+service:
+  build:
+    image: michaelbahr/eve-pos-service
+    dockerfile_path: Dockerfile
+
+foo:
+  image: python:3.5.2-slim
+
+#parser_test:
+#  build:
+#    image: michaelbahr/eve-pos-parser-test
+#    dockerfile_path: Dockerfile_scripts_test
+#
+#service_test:
+#  build:
+#    image: michaelbahr/eve-pos-service-test
+#    dockerfile_path: Dockerfile_test

@@ -193,3 +193,25 @@ Example call: `http://localhost:9000/balance/negative?authkey=secure`
 ```
 
 ### errors
+
+Will show a list of api errors which were caught while parsing.
+
+Example call: `http://localhost:9000/errors?authkey=secure`
+
+```
+[
+    {
+        "script": "loadPos", 
+        "corpId": 123456, 
+        "message": "Could not access the StarbaseList API", 
+        "timestamp": "2017-01-10 10:00:00.000000"
+    }, 
+    { ... }
+]
+```
+
+### errors/delete
+
+Will delete all errors from the `errors` endpoint. A blank page with status code `200` will be shown if successful.
+
+Example call: `http://localhost:9000/errors/delete?authkey=secure`

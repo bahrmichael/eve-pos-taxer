@@ -30,9 +30,9 @@ class TransactionParser:
     def process_transaction(self, corp_id, row):
         if self.is_target_recipient(row):
             post = self.build_entry(corp_id, row)
-            found = MongoProvider().find_one('transaction_journal', {"transactionId": post['transactionId']})
+            found = MongoProvider().find_one('transactionjournal', {"transactionId": post['transactionId']})
             if found is None:
-                MongoProvider().insert('transaction_journal', post)
+                MongoProvider().insert('transactionjournal', post)
                 print(str(post['transactionId']) + " added")
             else:
                 print(str(post['transactionId']) + " already exists")

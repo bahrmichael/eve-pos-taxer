@@ -77,7 +77,7 @@ class TestTransactionParser(unittest.TestCase):
         target_method.assert_called_with(row)
 
         self.assertEqual(find_method.call_count, 1)
-        find_method.assert_called_with('transaction_journal', {"transactionId": 123})
+        find_method.assert_called_with('transactionjournal', {"transactionId": 123})
 
         self.assertEqual(insert_method.call_count, 1)
 
@@ -98,7 +98,7 @@ class TestTransactionParser(unittest.TestCase):
         target_method.assert_called_with(row)
 
         self.assertEqual(find_method.call_count, 1)
-        find_method.assert_called_with('transaction_journal', {"transactionId": 123})
+        find_method.assert_called_with('transactionjournal', {"transactionId": 123})
 
         self.assertEqual(insert_method.call_count, 0)
 

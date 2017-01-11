@@ -55,6 +55,8 @@ def get_all_errors():
     errors = []
     for error in MongoProvider().provide().error_log.find():
         del error['_id']
+        # turn the timestamp into a string, to be json serializable
+        error['timestamp'] = str(error['timestamp'])
         errors.append(error)
     return errors
 

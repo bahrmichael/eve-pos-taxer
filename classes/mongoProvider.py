@@ -30,6 +30,9 @@ class MongoProvider:
     def find(self, collection):
         return self.cursor(collection).find()
 
+    def find_filtered(self, collection, parameters):
+        return self.cursor(collection).find(parameters)
+
     def find_one(self, collection, parameters):
         return self.cursor(collection).find_one(parameters)
 

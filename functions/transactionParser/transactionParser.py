@@ -15,7 +15,6 @@ def lambda_handler(event, context):
 
 
 class TransactionParser:
-
     endpoint = "/corp/WalletJournal.xml.aspx"
     has_new_transaction = None
 
@@ -36,14 +35,18 @@ class TransactionParser:
         )
 
     def process_corp(self, key_id, v_code, corp_id):
-        api_result = ApiWrapper(self.endpoint, key_id, v_code).call(None)
-        if api_result is None:
-            self.handle_error(corp_id)
-            return
+        account_keys = [1000, 1001, 1002, 1003, 1004, 1005, 1006]
+        row_count = 2560
+        for account_key in account_keys:
+            api_result = ApiWrapper(self.endpoint, key_id, v_code).call(
+                {'accountKey': account_key, 'rowCount': row_count})
+            if api_result is None:
+                self.handle_error(corp_id)
+                return
 
-        for row in api_result[0]:
-            # check if it is a donation to a given player name
-            self.process_transaction(corp_id, row)
+            for row in api_result[0]:
+                # check if it is a donation to a given player name
+                self.process_transaction(corp_id, row)
 
     def process_transaction(self, corp_id, row):
         if self.is_target_recipient(row):

@@ -2,16 +2,13 @@ import unittest
 from datetime import datetime
 from unittest import mock
 
-from classes.apiWrapper import ApiWrapper
-from classes.mongoProvider import MongoProvider
-from scripts.loadTransactions import TransactionParser
+from eveapimongo import ApiWrapper, MongoProvider
+from functions.transactionParser.transactionParser import TransactionParser
 
 
 class TestTransactionParser(unittest.TestCase):
     def setUp(self):
         self.sut = TransactionParser()
-
-        # mock.patch.object(MongoProvider, 'provide', return_value="test").start()
 
     def test_handle_error(self):
         date = datetime.now()
@@ -77,7 +74,7 @@ class TestTransactionParser(unittest.TestCase):
         target_method.assert_called_with(row)
 
         self.assertEqual(find_method.call_count, 1)
-        find_method.assert_called_with('transaction_journal', {"transactionId": 123})
+        find_method.assert_called_with('transactionjournal', {"transactionId": 123})
 
         self.assertEqual(insert_method.call_count, 1)
 
@@ -98,7 +95,7 @@ class TestTransactionParser(unittest.TestCase):
         target_method.assert_called_with(row)
 
         self.assertEqual(find_method.call_count, 1)
-        find_method.assert_called_with('transaction_journal', {"transactionId": 123})
+        find_method.assert_called_with('transactionjournal', {"transactionId": 123})
 
         self.assertEqual(insert_method.call_count, 0)
 

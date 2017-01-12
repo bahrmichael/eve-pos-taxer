@@ -2,8 +2,9 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock
 
-from classes.mongoProvider import MongoProvider
-from scripts.buildPosDayJournal import PosDayJournalBuilder
+from eveapimongo import MongoProvider
+
+from functions.posDayJournalBuilder.posDayJournalBuilder import PosDayJournalBuilder
 
 
 class TestPosDayJournalBuilder(unittest.TestCase):

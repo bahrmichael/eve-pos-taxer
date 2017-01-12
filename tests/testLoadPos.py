@@ -3,9 +3,10 @@ from datetime import datetime
 from unittest import mock
 from unittest.mock import MagicMock
 
-from classes.apiWrapper import ApiWrapper
-from classes.mongoProvider import MongoProvider
-from scripts.loadPos import PosParser
+from eveapimongo import ApiWrapper
+from eveapimongo import MongoProvider
+
+from functions.posParser.posParser import PosParser
 
 
 class TestPosParser(unittest.TestCase):

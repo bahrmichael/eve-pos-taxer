@@ -8,8 +8,10 @@ print('Loading function')
 
 
 def lambda_handler(event, context):
-    PosDayJournalBuilder().main()
-    return "done"
+    message = event['Records'][0]['Sns']['Message']
+    if message is "pos-parsing-done":
+        PosDayJournalBuilder().main()
+        return "done"
 
 
 class PosDayJournalBuilder:

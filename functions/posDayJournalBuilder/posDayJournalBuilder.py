@@ -22,16 +22,16 @@ class PosDayJournalBuilder:
 
         print("loading journal entries ...")
         journals = self.find_whitelisted_entries()
+        print("loaded %d journal entries" % len(journals))
 
         print("aggregation journal entries ...")
         aggregate = self.aggregate_journal(journals)
+        print("produced %d aggregate entries" % len(aggregate))
 
-        print("writing aggregation entries ...")
         if len(aggregate) > 0:
+            print("writing aggregation entries ...")
             MongoProvider().delete_all('pos_day_journal')
             self.write_entries(aggregate)
-        else:
-            print("No aggregates were produced")
 
     def write_entries(self, aggregate):
         bulk = MongoProvider().start_bulk('pos_day_journal')

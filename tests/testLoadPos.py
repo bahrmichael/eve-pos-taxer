@@ -3,9 +3,10 @@ from datetime import datetime
 from unittest import mock
 from unittest.mock import MagicMock
 
-from classes.apiWrapper import ApiWrapper
-from classes.mongoProvider import MongoProvider
-from scripts.loadPos import PosParser
+from eveapimongo import ApiWrapper
+from eveapimongo import MongoProvider
+
+from functions.posParser.posParser import PosParser
 
 
 class TestPosParser(unittest.TestCase):
@@ -99,7 +100,7 @@ class TestPosParser(unittest.TestCase):
 
         # verify
         self.assertEqual(find_patched.call_count, 1)
-        find_patched.assert_called_with('pos_journal', {"posId": row.get('any'),
+        find_patched.assert_called_with('posjournal', {"posId": row.get('any'),
                                                         "date": datetime.today().strftime('%Y-%m-%d')})
         self.assertEqual(insert_patched.call_count, 1)
 

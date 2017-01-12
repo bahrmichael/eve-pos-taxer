@@ -1,7 +1,15 @@
+import os
 from datetime import datetime
 
-from classes.apiWrapper import ApiWrapper
-from classes.mongoProvider import MongoProvider
+from eveapimongo import ApiWrapper
+from eveapimongo import MongoProvider
+
+print('Loading function')
+
+
+def lambda_handler(event, context):
+    PosParser().main()
+    return "done"
 
 
 class PosParser:
@@ -15,6 +23,15 @@ class PosParser:
         for corp in MongoProvider().find('corporations'):
             print("loading poses for corp " + corp['corpName'])
             self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'])
+
+        self.notify_aws_sns()
+
+    def notify_aws_sns(self):
+        import boto3
+        boto3.client('sns').publish(
+            TargetArn=os.environ['EVE_POS_SNS_QUEUE'],
+            Message='pos-parsing-done'
+        )
 
     def load_for_corp(self, key_id, v_code, corp_id):
         api_result = self.get_starbase_list(key_id, v_code)

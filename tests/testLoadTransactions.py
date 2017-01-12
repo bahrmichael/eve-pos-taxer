@@ -2,16 +2,13 @@ import unittest
 from datetime import datetime
 from unittest import mock
 
-from classes.apiWrapper import ApiWrapper
-from classes.mongoProvider import MongoProvider
-from scripts.loadTransactions import TransactionParser
+from eveapimongo import ApiWrapper, MongoProvider
+from functions.transactionParser.transactionParser import TransactionParser
 
 
 class TestTransactionParser(unittest.TestCase):
     def setUp(self):
         self.sut = TransactionParser()
-
-        # mock.patch.object(MongoProvider, 'provide', return_value="test").start()
 
     def test_handle_error(self):
         date = datetime.now()

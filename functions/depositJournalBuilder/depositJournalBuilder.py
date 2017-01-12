@@ -1,3 +1,4 @@
+import os
 from pprint import pprint
 
 from eveapimongo import MongoProvider
@@ -11,8 +12,16 @@ def lambda_handler(event, context):
     print("SNS Message: " + message)
     if message == "transaction-added":
         DepositJournalBuilder().main()
+        notify_aws_sns()
         return "done"
 
+
+def notify_aws_sns():
+    import boto3
+    boto3.client('sns').publish(
+        TargetArn=os.environ['EVE_POS_SNS_QUEUE'],
+        Message='deposits-built'
+    )
 
 class DepositJournalBuilder:
 

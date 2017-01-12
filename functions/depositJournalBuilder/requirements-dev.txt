@@ -1,3 +1,4 @@
 pymongo
 eveapimongo
 zappa
+boto3

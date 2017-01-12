@@ -1,2 +1,3 @@
 eveapimongo
 zappa
+boto3

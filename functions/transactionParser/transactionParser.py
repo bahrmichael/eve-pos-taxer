@@ -17,12 +17,23 @@ def lambda_handler(event, context):
 class TransactionParser:
 
     endpoint = "/corp/WalletJournal.xml.aspx"
+    has_new_transaction = None
 
     def main(self):
         print("loading corporations ...")
         for corp in MongoProvider().find('corporations'):
             print("processing corp %s" % corp['corpName'])
             self.process_corp(corp['key'], corp['vCode'], corp['corpId'])
+
+        if self.has_new_transaction:
+            self.notify_aws_sns()
+
+    def notify_aws_sns(self):
+        import boto3
+        boto3.client('sns').publish(
+            TargetArn=os.environ['EVE_POS_SNS_QUEUE'],
+            Message='transaction-added'
+        )
 
     def process_corp(self, key_id, v_code, corp_id):
         api_result = ApiWrapper(self.endpoint, key_id, v_code).call(None)
@@ -40,6 +51,7 @@ class TransactionParser:
             found = MongoProvider().find_one('transactionjournal', {"transactionId": post['transactionId']})
             if found is None:
                 MongoProvider().insert('transactionjournal', post)
+                self.has_new_transaction = "true"
                 print(str(post['transactionId']) + " added")
             else:
                 print(str(post['transactionId']) + " already exists")

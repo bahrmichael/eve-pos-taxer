@@ -7,8 +7,11 @@ print('Loading function')
 
 
 def lambda_handler(event, context):
-    DepositJournalBuilder().main()
-    return "done"
+    message = event['Records'][0]['Sns']['Message']
+    print("SNS Message: " + message)
+    if message == "transaction-added":
+        DepositJournalBuilder().main()
+        return "done"
 
 
 class DepositJournalBuilder:

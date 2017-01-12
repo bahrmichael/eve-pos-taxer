@@ -58,7 +58,7 @@ class TestPosDayJournalBuilder(unittest.TestCase):
         # verify
         self.assertEqual(result, entries)
         self.assertEqual(find_journal_method.call_count, 1)
-        find_journal_method.assert_called_with('pos_journal')
+        find_journal_method.assert_called_with('posjournal')
         self.assertEqual(find_whitelist_method.call_count, 2)
 
     def test_aggregate_journal(self):

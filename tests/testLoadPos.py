@@ -100,7 +100,7 @@ class TestPosParser(unittest.TestCase):
 
         # verify
         self.assertEqual(find_patched.call_count, 1)
-        find_patched.assert_called_with('pos_journal', {"posId": row.get('any'),
+        find_patched.assert_called_with('posjournal', {"posId": row.get('any'),
                                                         "date": datetime.today().strftime('%Y-%m-%d')})
         self.assertEqual(insert_patched.call_count, 1)
 

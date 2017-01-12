@@ -44,7 +44,7 @@ class PosDayJournalBuilder:
 
     def find_whitelisted_entries(self):
         journals = []
-        for entry in MongoProvider().find('pos_journal'):
+        for entry in MongoProvider().find('posjournal'):
             if self.is_whitelisted(entry['locationId']):
                 journals.append(entry)
         return journals

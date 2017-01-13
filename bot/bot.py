@@ -19,6 +19,7 @@ async def on_ready():
 @client.event
 async def on_message(message):
     if message.content.startswith('!test'):
+        print(message.channel)
         counter = 0
         tmp = await client.send_message(message.channel, 'Calculating messages...')
         async for log in client.logs_from(message.channel, limit=100):

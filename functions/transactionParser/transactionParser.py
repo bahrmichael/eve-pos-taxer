@@ -84,7 +84,7 @@ class TransactionParser:
         corp['failedAt'] = self.date_now()
         self.update_corp(corp)
 
-        self.notify_aws_sns('EVE_POS_SNS_ERROR', 'corpId:%d' % corp_id)
+        self.notify_aws_sns('EVE_POS_SNS_ERROR', 'Error parsing API for %s' % corp['corpName'])
 
     def update_corp(self, corp):
         MongoProvider().provide().get_collection('corporations').replace_one({'corpId': corp['corpId']}, corp)

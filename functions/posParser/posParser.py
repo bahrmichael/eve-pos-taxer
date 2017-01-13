@@ -48,7 +48,7 @@ class PosParser:
     def process_pos(self, corp_id, row):
         post = self.build_entry(corp_id, row)
         found = MongoProvider().find_one('posjournal', {"posId": post['posId'], "date": post['date']})
-        if found is not None:
+        if found is None:
             MongoProvider().insert('posjournal', post)
             print(post['posId'])
 

@@ -22,15 +22,18 @@ class PosParser:
 
         for corp in MongoProvider().find('corporations'):
             print("loading poses for corp " + corp['corpName'])
-            self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'])
+            if 'failedAt' not in corp:
+                self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'])
+            else:
+                print("The corp %s has previously failed and will not be parsed." % corp['corpName'])
 
-        self.notify_aws_sns()
+        self.notify_aws_sns('EVE_POS_SNS_QUEUE', 'pos-parsing-done')
 
-    def notify_aws_sns(self):
+    def notify_aws_sns(self, topic_variable, message):
         import boto3
         boto3.client('sns').publish(
-            TargetArn=os.environ['EVE_POS_SNS_QUEUE'],
-            Message='pos-parsing-done'
+            TargetArn=os.environ[topic_variable],
+            Message=message
         )
 
     def load_for_corp(self, key_id, v_code, corp_id):
@@ -70,6 +73,15 @@ class PosParser:
             'corpId': corp_id
         }
         MongoProvider().insert('error_log', post)
+
+        corp = MongoProvider().find_one('corporations', {'corpId': corp_id})
+        corp['failedAt'] = self.date_now()
+        self.update_corp(corp)
+
+        self.notify_aws_sns('EVE_POS_SNS_ERROR', 'corpId:%d' % corp_id)
+
+    def update_corp(self, corp):
+        MongoProvider().provide().get_collection('corporations').update_one(corp)
 
     def date_now(self):
         return datetime.now()

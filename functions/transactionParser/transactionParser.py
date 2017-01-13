@@ -87,7 +87,7 @@ class TransactionParser:
         self.notify_aws_sns('EVE_POS_SNS_ERROR', 'corpId:%d' % corp_id)
 
     def update_corp(self, corp):
-        MongoProvider().provide().get_collection('corporations').update_one(corp)
+        MongoProvider().provide().get_collection('corporations').update_one({'corpId': corp['corpId']}, corp)
 
     def date_now(self):
         return datetime.now()

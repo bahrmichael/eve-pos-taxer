@@ -122,7 +122,7 @@ class TestTransactionParser(unittest.TestCase):
 
         self.sut.process_corp(123, 'code', 123456)
 
-        self.assertEqual(process_method.call_count, 1)
+        self.assertEqual(process_method.call_count, 7)
         process_method.assert_called_with(123456, "test")
 
     def test_main(self):

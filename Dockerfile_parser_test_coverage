@@ -3,12 +3,9 @@ FROM python:3.5.2-slim
 RUN apt-get update && apt-get install git -qqy
 RUN pip install requests pymongo
 RUN pip install coveralls
+RUN pip install eveapimongo
 
 WORKDIR /home
 
-RUN git clone https://github.com/bahrmichael/eve-pos-taxer .
-
 COPY test_coverage.sh /home
 RUN chmod +x test_coverage.sh
-
-

@@ -48,52 +48,45 @@ class TestPosDayJournalBuilder(unittest.TestCase):
 
     def test_find_whitelisted_entries(self):
         # prepare
-        entries = [{'locationId': 1}, {'locationId': 2}]
-        find_journal_method = mock.patch.object(MongoProvider, 'find', return_value=entries).start()
-        find_whitelist_method = mock.patch.object(MongoProvider, 'find_one', return_value="something").start()
+        double_used_entries = [{'locationId': 1, 'systemId': 1}, {'locationId': 2, 'systemId': 2}]
+        find_method = mock.patch.object(MongoProvider, 'find', return_value=double_used_entries).start()
 
         # run
         result = self.sut.find_whitelisted_entries()
 
         # verify
-        self.assertEqual(result, entries)
-        self.assertEqual(find_journal_method.call_count, 1)
-        find_journal_method.assert_called_with('posjournal')
-        self.assertEqual(find_whitelist_method.call_count, 2)
+        self.assertEqual(find_method.call_count, 2)
+        self.assertEqual(result, double_used_entries)
 
-    def test_aggregate_journal(self):
-        # prepare
-        self.sut.process_entry = MagicMock(return_value="entry")
+    def test_aggregate_journal_multiple_entries_from_one_corp_and_same_day_should_return_one_aggregate(self):
+        data = [{'corpId': 123, 'date': 'today'}, {'corpId': 123, 'date': 'today'}, {'corpId': 123, 'date': 'today'}]
+        expected = [{'date': 'today', 'corpId': 123, 'amount': 3}]
 
-        # run
-        result = self.sut.aggregate_journal(['a', 'b'])
+        result = self.sut.aggregate_journal(data)
 
-        # verify
-        self.assertEqual(result, ['entry', 'entry'])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(expected, result)
 
-    def test_process_entry_already_in_list(self):
-        # prepare
-        self.sut.find_in_list = MagicMock(return_value={'amount': 10})
-        entry = {'date': 'date time', 'corpId': 0}
+    def test_aggregate_journal_multiple_entries_from_one_corp_and_two_days_should_return_two_aggregates(self):
+        data = [{'corpId': 123, 'date': 'today'}, {'corpId': 123, 'date': 'today'}, {'corpId': 123, 'date': 'otherDay'}]
 
-        # run
-        result = self.sut.process_entry("aggregated", entry)
+        result = self.sut.aggregate_journal(data)
 
-        # verify
-        expected = {'date': 'date', 'corpId': 0, 'amount': 11}
-        self.assertEqual(result, expected)
+        self.assertEqual(len(result), 2)
+        for element in result:
+            if element['corpId'] == 123 and element['date'] == 'today':
+                self.assertEqual(element['amount'], 2)
+            else:
+                self.assertEqual(element['amount'], 1)
 
-    def test_process_entry_not_in_list(self):
-        # prepare
-        self.sut.find_in_list = MagicMock(return_value=None)
-        entry = {'date': 'date time', 'corpId': 0}
+    def test_aggregate_journal_multiple_entries_from_multiple_corp_and_one_day_should_return_two_aggregates(self):
+        data = [{'corpId': 1, 'date': 'today'}, {'corpId': 1, 'date': 'today'}, {'corpId': 2, 'date': 'today'}]
+        expected = [{'date': 'today', 'corpId': 1, 'amount': 2}, {'date': 'today', 'corpId': 2, 'amount': 1}]
 
-        # run
-        result = self.sut.process_entry("aggregated", entry)
+        result = self.sut.aggregate_journal(data)
 
-        # verify
-        expected = {'date': 'date', 'corpId': 0, 'amount': 1}
-        self.assertEqual(result, expected)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(expected, result)
 
     def test_find_in_list_positive(self):
         entries = [{'date': 'date', 'corpId': 123456}]

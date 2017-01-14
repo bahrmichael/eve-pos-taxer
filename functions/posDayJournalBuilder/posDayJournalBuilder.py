@@ -44,38 +44,47 @@ class PosDayJournalBuilder:
 
     def find_whitelisted_entries(self):
         journals = []
+        whitelisted_locations = self.find_whitelisted_locations()
         for entry in MongoProvider().find('posjournal'):
-            if self.is_whitelisted(entry['locationId']):
+            if entry['locationId'] in whitelisted_locations:
                 journals.append(entry)
         return journals
 
-    def is_whitelisted(self, location_id):
-        location = MongoProvider().find_one('location_whitelist', {"systemId": int(location_id)})
-        return location is not None
+    def find_whitelisted_locations(self):
+        result = []
+        for entry in MongoProvider().find('location_whitelist'):
+            result.append(entry['systemId'])
+        return result
 
     def aggregate_journal(self, entries):
-        aggregated = []
+        aggregated = {}
+        keys = [item['corpId'] for item in entries]
+        for key in keys:
+            aggregated[key] = {}
+
         for entry in entries:
-            item = self.process_entry(aggregated, entry)
-            aggregated.append(item)
+            corp_id_ = entry['corpId']
+            date_ = entry['date']
+            if aggregated[corp_id_] == {}:
+                aggregated[corp_id_][date_] = 1
+            else:
+                try:
+                    aggregated[corp_id_][date_] += 1
+                except KeyError:
+                    aggregated[corp_id_][date_] = 1
 
-        return aggregated
+        result = []
+        for corp in aggregated:
+            for date in aggregated[corp]:
+                result.append({'date': date, 'corpId': corp, 'amount': aggregated[corp][date]})
 
-    def process_entry(self, aggregated, entry):
-        date_ = entry['date'].split(' ')[0]
-        corp_id_ = entry['corpId']
-
-        existing_item = self.find_in_list(date_, corp_id_, aggregated)
-
-        if existing_item is None:
-            amount = 1
-        else:
-            amount = existing_item['amount'] + 1
-
-        return {'date': date_, 'corpId': corp_id_, 'amount': amount}
+        return result
 
     def find_in_list(self, date, corp_id, entries):
         for entry in entries:
             if entry['date'] == date and entry['corpId'] == corp_id:
                 return entry
         return None
+
+if __name__ == "__main__":
+    PosDayJournalBuilder().main()

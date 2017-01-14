@@ -1,8 +1,3 @@
-parser:
-  build:
-    image: michaelbahr/eve-pos-parser
-    dockerfile_path: Dockerfile_parser
-
 service:
   build:
     image: michaelbahr/eve-pos-service

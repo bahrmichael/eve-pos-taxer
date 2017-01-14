@@ -1,0 +1,40 @@
+{
+  "dev": {
+    "s3_bucket": "zappa-eve-pos-taxer-dev",
+    "lambda_handler": "depositJournalBuilder.lambda_handler",
+    "profile_name": "adminuser",
+    "memory_size": 512,
+    "timeout_seconds": 120,
+    "keep_warm": false,
+    "events": [
+      {
+        "function": "depositJournalBuilder.lambda_handler",
+        "event_source": {
+          "arn": "arn:aws:sns:us-east-1:256608350746:EvePosJobs",
+          "events": [
+            "sns:Publish"
+          ]
+        }
+      }
+    ]
+  },
+  "production": {
+    "s3_bucket": "zappa-eve-pos-taxer-production",
+    "lambda_handler": "depositJournalBuilder.lambda_handler",
+    "profile_name": "adminuser",
+    "memory_size": 256,
+    "timeout_seconds": 180,
+    "keep_warm": false,
+    "events": [
+      {
+        "function": "depositJournalBuilder.lambda_handler",
+        "event_source": {
+          "arn": "arn:aws:sns:us-east-1:256608350746:EvePosJobs",
+          "events": [
+            "sns:Publish"
+          ]
+        }
+      }
+    ]
+  }
+}

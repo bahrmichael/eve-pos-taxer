@@ -14,10 +14,9 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * MongoDB (3.2.6 or newer)
 * Docker (1.12.3 or newer)
 * DockerCompose (1.8.1 or newer)
-
-### Optional
-
-Python 3.5.2 with `pymongo` and `requests` if you want to run the scripts outside of Docker.
+* A fully setup AWS Lambda account with IAM
+* Virtualenv
+* Python 2.7 and Pip with zappa
 
 ### Environment variables
 
@@ -28,8 +27,10 @@ Python 3.5.2 with `pymongo` and `requests` if you want to run the scripts outsid
 * `EVE_POS_DB_PASSWORD`: Database access password.
 * `EVE_POS_AUTHKEY`: A string to authorize API requests (see `app.py#app(...)`).
 * `EVE_POS_TAX_RECIPIENT`: The character's name, to whom the corps pay their taxes. This variable is only needed for the script `loadTransactions.py`.
-
-Those variables must all be set in `variables.env` for running the both the scripts image and the API image.
+* `EVE_POS_SNS_QUEUE`: ARN of the topic for intra function communication.
+* `EVE_POS_SNS_ERROR`: ARN of the topic for error message to be handled by the Error Webhook function.
+* `DISCORD_WEBHOOK`: Webhook for Discord.
+* `DISCORD_NOTIFIEES`: Space separated list of UserIDs to be notified by the Error Webhook function.
 
 ### Database preparation
 
@@ -63,17 +64,40 @@ Each entry in `location_whitelist` consists of the following JSON:
 
 ## Run
 
+### API Service
+
 1. `docker build . -t eve-pos-taxer` to build the api docker image.
-2. `docker build -f Dockerfile_scripts . -t eve-pos-taxer` to build the scripts docker image which depends on the api image.
-3. `docker run -it --env-file variables.env eve-pos-loader` to run all of the scripts below.
-    1. `loadPos.py` to track all poses which are online. Must be executed every day.
-    2. `loadTransactions.py` to track all transactions to the tax recipient. Must be executed to avoid overlooking old transactions.
-    3. `buildDepositJournal.py` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
-    4. `buildPosDayJournal.py` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
-    5. `buildBalanceJournal.py` to calculate the current balance of all corporations. Will drop and recreate the collection.
-4. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
+2. `docker-compose up` to serve the REST API at the port set in `docker-compose.yml` (default: 9000).
+
+### AWS Functions
+
+1. Create a trigger `cron(45 * * * ? *)` to schedule the parser functions every hour at minute 45 (to avoid the daily downtime).
+2. Create two SNS topics for and intra function communication and error reporting. The names will later be used for the environment variables `EVE_POS_SNS_QUEUE` and `EVE_POS_SNS_ERROR`. 
+3. Update the `functions/**/zappa_settings.json` files with your topic names and the IAM user you use for uploading the functions.
+4. Add `sns:publish` and `sns:subscribe` to the lambda execution role, that you use to execute the functions (default: ZappaLambdaExecution).
+5. In each function directory, create a virtual environment with `virtualenv env`, activate it with `source env/bin/activate`, install the requirements with `pip install -r requirements.txt` and deploy it to production (if you want that already) with `zappa deploy production`.
+6. Open up the trigger from step 1 and connect it with the functions `transactionParser` and `posParser`.
+7. Make sure that the builder functions are subscribed to the `EVE_POS_SNS_QUEUE`.
+8. Subscribe to `EVE_POS_SNS_ERROR` with either your e-mail or with the discord webhook below.
+9. Make sure that every function fulfills the requirements of its README.
+
+#### Function Webhook
+
+* `posParser` to track all poses which are online. Must be executed every day.
+* `balanceJournalBuilder` to calculate the current balance of all corporations. Will drop and recreate the collection.
+* `transactionParser` to track all transactions to the tax recipient. Must be executed daily to avoid overlooking old transactions. API walking is not yet implemented.
+* `depositJournalBuilder` to calculate the total deposit of all corporations until today. Will drop and recreate the collection.
+* `posDayJournalBuilder` to calculate the total posdays of all corporations until today. Will only use systems which are in the collection `location_whitelist`. Will drop and recreate the collection.
+
+### Discord Webhook
+
+1. Create a webhook in Discord.
+2. Deploy the Error Webhook function.
+3. Add the required environment variables and subscribe the function to the topic `EVE_POS_SNS_ERROR`.
 
 ## API Access
+
+*Will be migrated to AWS Lambda or Discord bot* 
 
 Adding the url parameter `csv=true` will provide a csv style response.
 

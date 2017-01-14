@@ -1,10 +1,9 @@
 FROM python:3.5.2-slim
 
 RUN pip install requests pymongo
+RUN pip install eveapimongo
 
 WORKDIR /home
 
-COPY classes /home/classes
-COPY runScripts.py /home/
-COPY scripts /home/scripts
+COPY functions /home/functions
 COPY tests /home/tests

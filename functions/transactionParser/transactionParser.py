@@ -1,21 +1,42 @@
+# -*- coding: utf-8 -*-
+
 import os
+
 from datetime import datetime
 
-from classes.apiWrapper import ApiWrapper
-from classes.mongoProvider import MongoProvider
+from eveapimongo import ApiWrapper, MongoProvider
+
+print('Loading function')
+
+
+def lambda_handler(event, context):
+    TransactionParser().main()
+    return "done"
 
 
 class TransactionParser:
 
     endpoint = "/corp/WalletJournal.xml.aspx"
+    has_new_transaction = None
 
     def main(self):
-        print("## Load transactions")
         print("loading corporations ...")
-
         for corp in MongoProvider().find('corporations'):
             print("processing corp %s" % corp['corpName'])
-            self.process_corp(corp['key'], corp['vCode'], corp['corpId'])
+            if 'failedAt' not in corp:
+                self.process_corp(corp['key'], corp['vCode'], corp['corpId'])
+            else:
+                print("The corp %s has previously failed and will not be parsed." % corp['corpName'])
+
+        if self.has_new_transaction:
+            self.notify_aws_sns('EVE_POS_SNS_QUEUE', 'transaction-added')
+
+    def notify_aws_sns(self, topic_variable, message):
+        import boto3
+        boto3.client('sns').publish(
+            TargetArn=os.environ[topic_variable],
+            Message=message
+        )
 
     def process_corp(self, key_id, v_code, corp_id):
         api_result = ApiWrapper(self.endpoint, key_id, v_code).call(None)
@@ -33,6 +54,7 @@ class TransactionParser:
             found = MongoProvider().find_one('transactionjournal', {"transactionId": post['transactionId']})
             if found is None:
                 MongoProvider().insert('transactionjournal', post)
+                self.has_new_transaction = "true"
                 print(str(post['transactionId']) + " added")
             else:
                 print(str(post['transactionId']) + " already exists")
@@ -58,11 +80,17 @@ class TransactionParser:
         }
         MongoProvider().insert('error_log', post)
 
+        corp = MongoProvider().find_one('corporations', {'corpId': corp_id})
+        corp['failedAt'] = self.date_now()
+        self.update_corp(corp)
+
+        self.notify_aws_sns('EVE_POS_SNS_ERROR', 'Error parsing API for %s' % corp['corpName'])
+
+    def update_corp(self, corp):
+        MongoProvider().provide().get_collection('corporations').replace_one({'corpId': corp['corpId']}, corp)
+
     def date_now(self):
         return datetime.now()
 
     def get_tax_recipient(self):
         return os.environ['EVE_POS_TAX_RECIPIENT']
-
-if __name__ == "__main__":
-    TransactionParser().main()

@@ -3,7 +3,7 @@ import os
 from cgi import parse_qs
 from datetime import datetime
 
-from classes.mongoProvider import MongoProvider
+from eveapimongo import MongoProvider
 
 POSDAY_FEE = 2000000
 

@@ -1,0 +1,2 @@
+eveapimongo
+boto3

@@ -1,10 +1,9 @@
 FROM python:2.7-slim
 
-RUN pip install pymongo
+RUN pip install pymongo eveapimongo
 
 WORKDIR /home
 
-COPY classes /home/classes
 COPY app.py /home
 
 EXPOSE 9000

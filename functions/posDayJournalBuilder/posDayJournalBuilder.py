@@ -1,8 +1,18 @@
 from pprint import pprint
 
+from eveapimongo import MongoProvider
 from pymongo.errors import BulkWriteError
 
-from classes.mongoProvider import MongoProvider
+
+print('Loading function')
+
+
+def lambda_handler(event, context):
+    message = event['Records'][0]['Sns']['Message']
+    print("SNS Message: " + message)
+    if message == "pos-parsing-done":
+        PosDayJournalBuilder().main()
+        return "done"
 
 
 class PosDayJournalBuilder:
@@ -12,16 +22,16 @@ class PosDayJournalBuilder:
 
         print("loading journal entries ...")
         journals = self.find_whitelisted_entries()
+        print("loaded %d journal entries" % len(journals))
 
         print("aggregation journal entries ...")
         aggregate = self.aggregate_journal(journals)
+        print("produced %d aggregate entries" % len(aggregate))
 
-        print("writing aggregation entries ...")
         if len(aggregate) > 0:
+            print("writing aggregation entries ...")
             MongoProvider().delete_all('pos_day_journal')
             self.write_entries(aggregate)
-        else:
-            print("No aggregates were produced")
 
     def write_entries(self, aggregate):
         bulk = MongoProvider().start_bulk('pos_day_journal')
@@ -34,7 +44,7 @@ class PosDayJournalBuilder:
 
     def find_whitelisted_entries(self):
         journals = []
-        for entry in MongoProvider().find('pos_journal'):
+        for entry in MongoProvider().find('posjournal'):
             if self.is_whitelisted(entry['locationId']):
                 journals.append(entry)
         return journals
@@ -69,7 +79,3 @@ class PosDayJournalBuilder:
             if entry['date'] == date and entry['corpId'] == corp_id:
                 return entry
         return None
-
-
-if __name__ == "__main__":
-    PosDayJournalBuilder().main()

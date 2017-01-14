@@ -20,11 +20,18 @@ class TestTransactionParser(unittest.TestCase):
         }
         mock.patch.object(self.sut, 'date_now', return_value=date).start()
         insert_method = mock.patch.object(MongoProvider, 'insert').start()
+        find_method = mock.patch.object(MongoProvider, 'find_one',
+                                        return_value={'corpId': 123456, 'corpName': 'Test Corp'}).start()
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+        notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 
         self.sut.handle_error(123456)
 
         self.assertEqual(insert_method.call_count, 1)
         insert_method.assert_called_with('error_log', expected_post)
+        self.assertEqual(find_method.call_count, 1)
+        self.assertEqual(update_method.call_count, 1)
+        self.assertEqual(notify_method.call_count, 1)
 
     def test_is_target_recipient(self):
         expected = "recipient"
@@ -127,6 +134,15 @@ class TestTransactionParser(unittest.TestCase):
 
         self.assertEqual(process_method.call_count, 1)
         process_method.assert_called_with(123, 'code', 123456)
+
+    def test_main_with_failed_corp(self):
+        corps = [{'key': 123, 'vCode': 'code', 'corpId': 123456, 'corpName': 'name', 'failedAt': 1}]
+        mock.patch.object(MongoProvider, 'find', return_value=corps).start()
+        process_method = mock.patch.object(self.sut, 'process_corp').start()
+
+        self.sut.main()
+
+        self.assertEqual(process_method.call_count, 0)
 
     class MockRow:
         text = ""

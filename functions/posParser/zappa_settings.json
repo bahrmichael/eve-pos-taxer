@@ -1,0 +1,18 @@
+{
+  "dev": {
+    "s3_bucket": "zappa-eve-pos-taxer-dev",
+    "lambda_handler": "posParser.lambda_handler",
+    "profile_name": "adminuser",
+    "memory_size": 512,
+    "timeout_seconds": 120,
+    "keep_warm": false
+  },
+  "production": {
+    "s3_bucket": "zappa-eve-pos-taxer-production",
+    "lambda_handler": "posParser.lambda_handler",
+    "profile_name": "adminuser",
+    "memory_size": 256,
+    "timeout_seconds": 180,
+    "keep_warm": false
+  }
+}

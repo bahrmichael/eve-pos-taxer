@@ -10,7 +10,6 @@ from functions.posParser.posParser import PosParser
 
 
 class TestPosParser(unittest.TestCase):
-
     def setUp(self):
         self.sut = PosParser()
         self.sut.get_mongo_collection_cursor = MagicMock(return_value=None)
@@ -24,6 +23,7 @@ class TestPosParser(unittest.TestCase):
         find_patched = find_patcher.start()
         load_patcher = mock.patch.object(self.sut, 'load_for_corp')
         load_patched = load_patcher.start()
+        notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 
         # run
         self.sut.main()
@@ -34,6 +34,27 @@ class TestPosParser(unittest.TestCase):
         corp = corps[0]
         self.assertEqual(load_patched.call_count, 1)
         load_patched.assert_called_with(corp['key'], corp['vCode'], corp['corpId'])
+        self.assertEqual(notify_method.call_count, 1)
+
+    def test_main_with_failed_corp(self):
+        # test data
+        corps = [{'key': 1, 'vCode': 'v', 'corpId': 2, 'corpName': 't', 'failedAt': 1}]
+
+        # mocking
+        find_patcher = mock.patch.object(MongoProvider, 'find', return_value=corps)
+        find_patched = find_patcher.start()
+        load_patcher = mock.patch.object(self.sut, 'load_for_corp')
+        load_patched = load_patcher.start()
+        notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
+
+        # run
+        self.sut.main()
+
+        # verify
+        self.assertEqual(find_patched.call_count, 1)
+        find_patched.assert_called_with('corporations')
+        self.assertEqual(load_patched.call_count, 0)
+        self.assertEqual(notify_method.call_count, 1)
 
     def test_load_for_corp_api_error(self):
         # mocking
@@ -92,8 +113,8 @@ class TestPosParser(unittest.TestCase):
         # mocking
         find_patcher = mock.patch.object(MongoProvider, 'find_one', return_value="found")
         find_patched = find_patcher.start()
-        insert_patcher = mock.patch.object(MongoProvider, 'insert')
-        insert_patched = insert_patcher.start()
+        update_patcher = mock.patch.object(self.sut, 'update_corp')
+        update_patched = update_patcher.start()
 
         # run
         self.sut.process_pos(1, row)
@@ -101,8 +122,8 @@ class TestPosParser(unittest.TestCase):
         # verify
         self.assertEqual(find_patched.call_count, 1)
         find_patched.assert_called_with('posjournal', {"posId": row.get('any'),
-                                                        "date": datetime.today().strftime('%Y-%m-%d')})
-        self.assertEqual(insert_patched.call_count, 1)
+                                                       "date": datetime.today().strftime('%Y-%m-%d')})
+        self.assertEqual(update_patched.call_count, 0)
 
     def test_handle_error(self):
         # test data
@@ -117,8 +138,12 @@ class TestPosParser(unittest.TestCase):
         # mocking
         insert_patcher = mock.patch.object(MongoProvider, 'insert')
         insert_patched = insert_patcher.start()
-        date_patcher= mock.patch.object(self.sut, 'date_now', return_value=date)
-        date_patched=date_patcher.start()
+        date_patcher = mock.patch.object(self.sut, 'date_now', return_value=date)
+        date_patched = date_patcher.start()
+        find_method = mock.patch.object(MongoProvider, 'find_one',
+                                        return_value={'corpId': 123456, 'corpName': 'Test Corp'}).start()
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+        notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 
         # run
         self.sut.handle_error(expected['corpId'])
@@ -126,7 +151,11 @@ class TestPosParser(unittest.TestCase):
         # verify
         self.assertEqual(insert_patched.call_count, 1)
         insert_patched.assert_called_with('error_log', expected)
-        self.assertEqual(date_patched.call_count, 1)
+        self.assertEqual(date_patched.call_count, 2)
+        self.assertEqual(find_method.call_count, 1)
+        self.assertEqual(update_method.call_count, 1)
+        self.assertEqual(notify_method.call_count, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

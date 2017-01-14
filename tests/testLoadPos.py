@@ -17,44 +17,50 @@ class TestPosParser(unittest.TestCase):
     def test_main(self):
         # test data
         corps = [{'key': 1, 'vCode': 'v', 'corpId': 2, 'corpName': 't'}]
+        empty_list = []
 
         # mocking
-        find_patcher = mock.patch.object(MongoProvider, 'find', return_value=corps)
-        find_patched = find_patcher.start()
-        load_patcher = mock.patch.object(self.sut, 'load_for_corp')
-        load_patched = load_patcher.start()
+        find_poses_patched = mock.patch.object(self.sut, 'find_todays_poses', return_value=empty_list).start()
+        find_corps_patched = mock.patch.object(self.sut, 'find_corporations', return_value=corps).start()
+        load_patched = mock.patch.object(self.sut, 'load_for_corp', return_value=[1]).start()
+        write_method = mock.patch.object(self.sut, 'write_poses').start()
         notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 
         # run
         self.sut.main()
 
         # verify
-        self.assertEqual(find_patched.call_count, 1)
-        find_patched.assert_called_with('corporations')
+        self.assertEqual(find_poses_patched.call_count, 1)
+        self.assertEqual(find_corps_patched.call_count, 1)
         corp = corps[0]
         self.assertEqual(load_patched.call_count, 1)
-        load_patched.assert_called_with(corp['key'], corp['vCode'], corp['corpId'])
+        load_patched.assert_called_with(corp['key'], corp['vCode'], corp['corpId'], empty_list)
+        self.assertEqual(write_method.call_count, 1)
         self.assertEqual(notify_method.call_count, 1)
 
-    def test_main_with_failed_corp(self):
+    def test_main_no_new_poses(self):
         # test data
-        corps = [{'key': 1, 'vCode': 'v', 'corpId': 2, 'corpName': 't', 'failedAt': 1}]
+        corps = [{'key': 1, 'vCode': 'v', 'corpId': 2, 'corpName': 't'}]
+        empty_list = []
 
         # mocking
-        find_patcher = mock.patch.object(MongoProvider, 'find', return_value=corps)
-        find_patched = find_patcher.start()
-        load_patcher = mock.patch.object(self.sut, 'load_for_corp')
-        load_patched = load_patcher.start()
+        find_poses_patched = mock.patch.object(self.sut, 'find_todays_poses', return_value=empty_list).start()
+        find_corps_patched = mock.patch.object(self.sut, 'find_corporations', return_value=corps).start()
+        load_patched = mock.patch.object(self.sut, 'load_for_corp', return_value=empty_list).start()
+        write_method = mock.patch.object(self.sut, 'write_poses').start()
         notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 
         # run
         self.sut.main()
 
         # verify
-        self.assertEqual(find_patched.call_count, 1)
-        find_patched.assert_called_with('corporations')
-        self.assertEqual(load_patched.call_count, 0)
-        self.assertEqual(notify_method.call_count, 1)
+        self.assertEqual(find_poses_patched.call_count, 1)
+        self.assertEqual(find_corps_patched.call_count, 1)
+        corp = corps[0]
+        self.assertEqual(load_patched.call_count, 1)
+        load_patched.assert_called_with(corp['key'], corp['vCode'], corp['corpId'], empty_list)
+        self.assertEqual(write_method.call_count, 0)
+        self.assertEqual(notify_method.call_count, 0)
 
     def test_load_for_corp_api_error(self):
         # mocking
@@ -66,7 +72,7 @@ class TestPosParser(unittest.TestCase):
         process_patched = process_patcher.start()
 
         # run
-        self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2)
+        self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2, existing_poses=[])
 
         # verify
         self.assertEqual(api_patched.call_count, 1)
@@ -78,6 +84,7 @@ class TestPosParser(unittest.TestCase):
     def test_load_for_corp_api(self):
         # test data
         api_result = [["api_data"]]
+        empty_pos_list = []
 
         # mocking
         get_patcher = mock.patch.object(ApiWrapper, 'call', return_value=api_result)
@@ -88,14 +95,14 @@ class TestPosParser(unittest.TestCase):
         process_patched = process_patcher.start()
 
         # run
-        self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2)
+        self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2, existing_poses=empty_pos_list)
 
         # verify
         self.assertEqual(api_patched.call_count, 1)
         api_patched.assert_called_with(None)
         self.assertEqual(handle_patched.call_count, 0)
         self.assertEqual(process_patched.call_count, 1)
-        process_patched.assert_called_with(2, "api_data")
+        process_patched.assert_called_with(2, "api_data", empty_pos_list)
 
     class MockRow:
         text = ""
@@ -106,24 +113,30 @@ class TestPosParser(unittest.TestCase):
         def get(self, irrelevant_parameter):
             return self.text
 
-    def test_process_pos(self):
-        # test data
-        row = self.MockRow(123456)
+    def test_process_corp_that_failed(self):
+        corp = {'failedAt': 1, 'corpName': 'test'}
 
-        # mocking
-        find_patcher = mock.patch.object(MongoProvider, 'find_one', return_value="found")
-        find_patched = find_patcher.start()
-        update_patcher = mock.patch.object(self.sut, 'update_corp')
-        update_patched = update_patcher.start()
+        load_patched = mock.patch.object(self.sut, 'load_for_corp').start()
 
-        # run
-        self.sut.process_pos(1, row)
+        self.sut.process_corp(corp, None, None)
 
-        # verify
-        self.assertEqual(find_patched.call_count, 1)
-        find_patched.assert_called_with('posjournal', {"posId": row.get('any'),
-                                                       "date": datetime.today().strftime('%Y-%m-%d')})
-        self.assertEqual(update_patched.call_count, 0)
+        self.assertEqual(load_patched.call_count, 0)
+
+
+    def test_process_pos_exists(self):
+        row = self.MockRow('123')
+        existing_poses = [{'posId': 123}]
+
+        result = self.sut.process_pos(123456, row, existing_poses)
+
+        self.assertIsNone(result)
+    def test_process_pos_is_new(self):
+        row = self.MockRow('123')
+        existing_poses = [{'posId': 9999999}]
+
+        result = self.sut.process_pos(123456, row, existing_poses)
+
+        self.assertIsNotNone(result)
 
     def test_handle_error(self):
         # test data

@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import itertools
 from eveapimongo import ApiWrapper
 from eveapimongo import MongoProvider
 
@@ -18,39 +19,71 @@ class PosParser:
 
     def main(self):
         print("## Load Poses")
+
+        print("loading poses that were parsed today ...")
+        existing_poses = self.find_todays_poses()
+        new_poses = []
+
         print("loading corporations ...")
+        for corp in self.find_corporations():
+            self.process_corp(corp, existing_poses, new_poses)
 
-        for corp in MongoProvider().find('corporations'):
+        merged = list(itertools.chain.from_iterable(new_poses))
+        if len(merged) > 0:
+            print("Writing %d poses" % len(merged))
+            self.write_poses(merged)
+            self.notify_aws_sns('EVE_POS_SNS_QUEUE', 'pos-parsing-done')
+        else:
+            print("No new poses to write")
+
+    def find_corporations(self):
+        return MongoProvider().find('corporations')
+
+    def write_poses(self, merged):
+        MongoProvider().cursor('posjournal').insert_many(merged)
+
+    def find_todays_poses(self):
+        result = []
+        for entry in MongoProvider().find_filtered('posjournal', {'date': datetime.today().strftime('%Y-%m-%d')}):
+            result.append(entry)
+        return result
+
+    def process_corp(self, corp, existing_poses, new_poses):
+        if 'failedAt' not in corp:
             print("loading poses for corp " + corp['corpName'])
-            if 'failedAt' not in corp:
-                self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'])
-            else:
-                print("The corp %s has previously failed and will not be parsed." % corp['corpName'])
+            corp_poses = self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'], existing_poses)
+            if len(corp_poses) > 0:
+                new_poses.append(corp_poses)
+        else:
+            print("The corp %s has previously failed and will not be parsed." % corp['corpName'])
 
-        self.notify_aws_sns('EVE_POS_SNS_QUEUE', 'pos-parsing-done')
-
-    def notify_aws_sns(self, topic_variable, message):
-        import boto3
-        boto3.client('sns').publish(
-            TargetArn=os.environ[topic_variable],
-            Message=message
-        )
-
-    def load_for_corp(self, key_id, v_code, corp_id):
+    def load_for_corp(self, key_id, v_code, corp_id, existing_poses):
+        poses = []
         api_result = self.get_starbase_list(key_id, v_code)
         if api_result is None:
             self.handle_error(corp_id)
-            return
+            return []
 
         for row in api_result[0]:
-            self.process_pos(corp_id, row)
+            pos = self.process_pos(corp_id, row, existing_poses)
+            if pos:
+                poses.append(pos)
+                # this append is important, so the same pos doesnt get added twice
+                existing_poses.append(pos)
+        return poses
 
-    def process_pos(self, corp_id, row):
+    def process_pos(self, corp_id, row, existing_poses):
         post = self.build_entry(corp_id, row)
-        found = MongoProvider().find_one('posjournal', {"posId": post['posId'], "date": post['date']})
-        if found is None:
-            MongoProvider().insert('posjournal', post)
+        if not self.exists(post, existing_poses):
             print(post['posId'])
+            return post
+
+    def exists(self, post, existing_poses):
+        for entry in existing_poses:
+            needle = post['posId']
+            if needle == entry['posId']:
+                return 1
+        return 0
 
     def build_entry(self, corp_id, row):
         post = {
@@ -63,6 +96,13 @@ class PosParser:
             "date": datetime.today().strftime('%Y-%m-%d')
         }
         return post
+
+    def notify_aws_sns(self, topic_variable, message):
+        import boto3
+        boto3.client('sns').publish(
+            TargetArn=os.environ[topic_variable],
+            Message=message
+        )
 
     def handle_error(self, corp_id):
         print("Could not access the pos api for corpId " + str(corp_id))

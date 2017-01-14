@@ -14,7 +14,7 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * MongoDB (3.2.6 or newer)
 * Docker (1.12.3 or newer)
 * DockerCompose (1.8.1 or newer)
-* A fully setup AWS Lambda account
+* A fully setup AWS Lambda account with IAM
 * Virtualenv
 * Python 2.7 and Pip with zappa
 
@@ -27,8 +27,10 @@ The balance is calculated of the corporation's deposit minus there amount of use
 * `EVE_POS_DB_PASSWORD`: Database access password.
 * `EVE_POS_AUTHKEY`: A string to authorize API requests (see `app.py#app(...)`).
 * `EVE_POS_TAX_RECIPIENT`: The character's name, to whom the corps pay their taxes. This variable is only needed for the script `loadTransactions.py`.
-
-All variables except `EVE_POS_TAX_RECIPIENT` must all be set in `variables.env` for running the API image.
+* `EVE_POS_SNS_QUEUE`: ARN of the topic for intra function communication.
+* `EVE_POS_SNS_ERROR`: ARN of the topic for error message to be handled by the Error Webhook function.
+* `DISCORD_WEBHOOK`: Webhook for Discord.
+* `DISCORD_NOTIFIEES`: Space separated list of UserIDs to be notified by the Error Webhook function.
 
 ### Database preparation
 
@@ -89,7 +91,13 @@ Each entry in `location_whitelist` consists of the following JSON:
 
 ### Discord Webhook
 
+1. Create a webhook in Discord.
+2. Deploy the Error Webhook function.
+3. Add the required environment variables and subscribe the function to the topic `EVE_POS_SNS_ERROR`.
+
 ## API Access
+
+*Will be migrated to AWS Lambda or Discord bot* 
 
 Adding the url parameter `csv=true` will provide a csv style response.
 

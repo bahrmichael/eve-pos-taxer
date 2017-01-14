@@ -20,7 +20,8 @@ class TestTransactionParser(unittest.TestCase):
         }
         mock.patch.object(self.sut, 'date_now', return_value=date).start()
         insert_method = mock.patch.object(MongoProvider, 'insert').start()
-        find_method = mock.patch.object(MongoProvider, 'find_one', return_value={'corpId': 123456}).start()
+        find_method = mock.patch.object(MongoProvider, 'find_one',
+                                        return_value={'corpId': 123456, 'corpName': 'Test Corp'}).start()
         update_method = mock.patch.object(self.sut, 'update_corp').start()
         notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 

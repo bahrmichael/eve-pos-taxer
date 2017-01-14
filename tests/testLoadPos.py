@@ -113,8 +113,8 @@ class TestPosParser(unittest.TestCase):
         # mocking
         find_patcher = mock.patch.object(MongoProvider, 'find_one', return_value="found")
         find_patched = find_patcher.start()
-        insert_patcher = mock.patch.object(MongoProvider, 'insert')
-        insert_patched = insert_patcher.start()
+        update_patcher = mock.patch.object(self.sut, 'update_corp')
+        update_patched = update_patcher.start()
 
         # run
         self.sut.process_pos(1, row)
@@ -123,7 +123,7 @@ class TestPosParser(unittest.TestCase):
         self.assertEqual(find_patched.call_count, 1)
         find_patched.assert_called_with('posjournal', {"posId": row.get('any'),
                                                        "date": datetime.today().strftime('%Y-%m-%d')})
-        self.assertEqual(insert_patched.call_count, 1)
+        self.assertEqual(update_patched.call_count, 0)
 
     def test_handle_error(self):
         # test data
@@ -140,7 +140,8 @@ class TestPosParser(unittest.TestCase):
         insert_patched = insert_patcher.start()
         date_patcher = mock.patch.object(self.sut, 'date_now', return_value=date)
         date_patched = date_patcher.start()
-        find_method = mock.patch.object(MongoProvider, 'find_one', return_value={'corpId': 123456}).start()
+        find_method = mock.patch.object(MongoProvider, 'find_one',
+                                        return_value={'corpId': 123456, 'corpName': 'Test Corp'}).start()
         update_method = mock.patch.object(self.sut, 'update_corp').start()
         notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 

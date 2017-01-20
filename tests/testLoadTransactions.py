@@ -144,11 +144,15 @@ class TestTransactionParser(unittest.TestCase):
         corps = [{'key': 123, 'vCode': 'code', 'corpId': 123456, 'corpName': 'name'}]
         mock.patch.object(MongoProvider, 'find', return_value=corps).start()
         process_method = mock.patch.object(self.sut, 'process_corp').start()
+        notification_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
+        mock.patch.object(self.sut, 'reset_fail_count').start()
 
+        self.sut.has_new_transaction = 1
         self.sut.main()
 
         self.assertEqual(process_method.call_count, 1)
         process_method.assert_called_with(123, 'code', 123456)
+        self.assertEqual(notification_method.call_count, 1)
 
     def test_process_corp_that_failed_more_than_three_times(self):
         corps = [{'failCount': 4, 'corpName': 'test'}]
@@ -163,6 +167,7 @@ class TestTransactionParser(unittest.TestCase):
         corps = [{'failCount': 3, 'corpName': 'test', 'key': 1, 'vCode': 'code', 'corpId': 123}]
         mock.patch.object(MongoProvider, 'find', return_value=corps).start()
         process_method = mock.patch.object(self.sut, 'process_corp').start()
+        mock.patch.object(self.sut, 'reset_fail_count').start()
 
         self.sut.main()
 
@@ -172,6 +177,7 @@ class TestTransactionParser(unittest.TestCase):
         corps = [{'corpName': 'test', 'key': 1, 'vCode': 'code', 'corpId': 123}]
         mock.patch.object(MongoProvider, 'find', return_value=corps).start()
         process_method = mock.patch.object(self.sut, 'process_corp').start()
+        mock.patch.object(self.sut, 'reset_fail_count').start()
 
         self.sut.main()
 
@@ -185,6 +191,24 @@ class TestTransactionParser(unittest.TestCase):
 
         def get(self, irrelevant_parameter):
             return self.text
+
+    def test_reset_fail_count_with_failed_corp(self):
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+        corp = {'corpId': 123, 'failCount': 3}
+
+        self.sut.reset_fail_count(corp)
+
+        self.assertEqual(update_method.call_count, 1)
+        update_method.assert_called_with({'corpId': 123})
+
+    def test_reset_fail_count_with_non_failed_corp(self):
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+        corp = {'corpId': 123}
+
+        self.sut.reset_fail_count(corp)
+
+        self.assertEqual(update_method.call_count, 0)
+
 
 
 if __name__ == '__main__':

@@ -36,6 +36,11 @@ class PosParser:
         else:
             print("No new poses to write")
 
+    def reset_fail_count(self, corp):
+        if 'failCount' in corp:
+            del corp['failCount']
+            self.update_corp(corp)
+
     def find_corporations(self):
         return MongoProvider().find('corporations')
 
@@ -51,21 +56,23 @@ class PosParser:
     def process_corp(self, corp, existing_poses, new_poses):
         if 'failCount' not in corp or corp['failCount'] <= 3:
             print("loading poses for corp " + corp['corpName'])
-            corp_poses = self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'], existing_poses)
+            corp_poses = self.load_for_corp(corp, existing_poses)
             if len(corp_poses) > 0:
                 new_poses.append(corp_poses)
         else:
-            print("The corp %s has previously failed and will not be parsed." % corp['corpName'])
+            print("The corp %s has previously failed more than 3 times and will not be parsed." % corp['corpName'])
 
-    def load_for_corp(self, key_id, v_code, corp_id, existing_poses):
+    def load_for_corp(self, corp, existing_poses):
         poses = []
-        api_result = self.get_starbase_list(key_id, v_code)
+        api_result = self.get_starbase_list(corp['keyId'], corp['vCode'])
         if api_result is None:
-            self.handle_error(corp_id)
+            self.handle_error(corp['corpId'])
             return []
+        else:
+            self.reset_fail_count(corp)
 
         for row in api_result[0]:
-            pos = self.process_pos(corp_id, row, existing_poses)
+            pos = self.process_pos(corp['corpId'], row, existing_poses)
             if pos:
                 poses.append(pos)
                 # this append is important, so the same pos doesnt get added twice

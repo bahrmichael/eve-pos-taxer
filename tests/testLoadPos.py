@@ -34,7 +34,7 @@ class TestPosParser(unittest.TestCase):
         self.assertEqual(find_corps_patched.call_count, 1)
         corp = corps[0]
         self.assertEqual(load_patched.call_count, 1)
-        load_patched.assert_called_with(corp['key'], corp['vCode'], corp['corpId'], empty_list)
+        load_patched.assert_called_with(corp, empty_list)
         self.assertEqual(write_method.call_count, 1)
         self.assertEqual(notify_method.call_count, 1)
 
@@ -58,7 +58,7 @@ class TestPosParser(unittest.TestCase):
         self.assertEqual(find_corps_patched.call_count, 1)
         corp = corps[0]
         self.assertEqual(load_patched.call_count, 1)
-        load_patched.assert_called_with(corp['key'], corp['vCode'], corp['corpId'], empty_list)
+        load_patched.assert_called_with(corp, empty_list)
         self.assertEqual(write_method.call_count, 0)
         self.assertEqual(notify_method.call_count, 0)
 
@@ -72,7 +72,8 @@ class TestPosParser(unittest.TestCase):
         process_patched = process_patcher.start()
 
         # run
-        self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2, existing_poses=[])
+        corp = {'keyId': 1, 'vCode': 'v', 'corpId': 2}
+        self.sut.load_for_corp(corp, existing_poses=[])
 
         # verify
         self.assertEqual(api_patched.call_count, 1)
@@ -93,9 +94,11 @@ class TestPosParser(unittest.TestCase):
         handle_patched = handle_patcher.start()
         process_patcher = mock.patch.object(self.sut, 'process_pos')
         process_patched = process_patcher.start()
+        reset_method = mock.patch.object(self.sut, 'reset_fail_count').start()
 
         # run
-        self.sut.load_for_corp(key_id=1, v_code='v', corp_id=2, existing_poses=empty_pos_list)
+        corp = {'keyId': 1, 'vCode': 'v', 'corpId': 2}
+        self.sut.load_for_corp(corp, existing_poses=empty_pos_list)
 
         # verify
         self.assertEqual(api_patched.call_count, 1)
@@ -103,6 +106,7 @@ class TestPosParser(unittest.TestCase):
         self.assertEqual(handle_patched.call_count, 0)
         self.assertEqual(process_patched.call_count, 1)
         process_patched.assert_called_with(2, "api_data", empty_pos_list)
+        self.assertEqual(reset_method.call_count, 1)
 
     class MockRow:
         text = ""
@@ -190,6 +194,23 @@ class TestPosParser(unittest.TestCase):
         self.assertEqual(update_method.call_count, 1)
         update_method.assert_called_with(expected)
         self.assertEqual(notify_method.call_count, 1)
+
+    def test_reset_fail_count_with_failed_corp(self):
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+        corp = {'corpId': 123, 'failCount': 3}
+
+        self.sut.reset_fail_count(corp)
+
+        self.assertEqual(update_method.call_count, 1)
+        update_method.assert_called_with({'corpId': 123})
+
+    def test_reset_fail_count_with_non_failed_corp(self):
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+        corp = {'corpId': 123}
+
+        self.sut.reset_fail_count(corp)
+
+        self.assertEqual(update_method.call_count, 0)
 
 
 if __name__ == '__main__':

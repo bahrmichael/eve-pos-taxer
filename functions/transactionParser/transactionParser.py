@@ -24,11 +24,17 @@ class TransactionParser:
             print("processing corp %s" % corp['corpName'])
             if 'failCount' not in corp or corp['failCount'] <= 3:
                 self.process_corp(corp['key'], corp['vCode'], corp['corpId'])
+                self.reset_fail_count(corp)
             else:
-                print("The corp %s has previously failed and will not be parsed." % corp['corpName'])
+                print("The corp %s has previously failed more than 3 time and will not be parsed." % corp['corpName'])
 
         if self.has_new_transaction:
             self.notify_aws_sns('EVE_POS_SNS_QUEUE', 'transaction-added')
+
+    def reset_fail_count(self, corp):
+        if 'failCount' in corp:
+            del corp['failCount']
+            self.update_corp(corp)
 
     def notify_aws_sns(self, topic_variable, message):
         import boto3

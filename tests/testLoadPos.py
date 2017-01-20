@@ -113,15 +113,29 @@ class TestPosParser(unittest.TestCase):
         def get(self, irrelevant_parameter):
             return self.text
 
-    def test_process_corp_that_failed(self):
-        corp = {'failedAt': 1, 'corpName': 'test'}
-
+    def test_process_corp_that_failed_more_than_three_times(self):
+        corp = {'failCount': 4, 'corpName': 'test'}
         load_patched = mock.patch.object(self.sut, 'load_for_corp').start()
 
         self.sut.process_corp(corp, None, None)
 
         self.assertEqual(load_patched.call_count, 0)
 
+    def test_process_corp_that_failed_less_or_equal_three(self):
+        corp = {'failCount': 3, 'corpName': 'test', 'key': 1, 'vCode': 'code', 'corpId': 123}
+        load_patched = mock.patch.object(self.sut, 'load_for_corp').start()
+
+        self.sut.process_corp(corp, None, None)
+
+        self.assertEqual(load_patched.call_count, 1)
+
+    def test_process_corp_that_didnt_fail(self):
+        corp = {'corpName': 'test', 'key': 1, 'vCode': 'code', 'corpId': 123}
+        load_patched = mock.patch.object(self.sut, 'load_for_corp').start()
+
+        self.sut.process_corp(corp, None, None)
+
+        self.assertEqual(load_patched.call_count, 1)
 
     def test_process_pos_exists(self):
         row = self.MockRow('123')
@@ -130,6 +144,7 @@ class TestPosParser(unittest.TestCase):
         result = self.sut.process_pos(123456, row, existing_poses)
 
         self.assertIsNone(result)
+
     def test_process_pos_is_new(self):
         row = self.MockRow('123')
         existing_poses = [{'posId': 9999999}]
@@ -138,21 +153,11 @@ class TestPosParser(unittest.TestCase):
 
         self.assertIsNotNone(result)
 
-    def test_handle_error(self):
+    def test_handle_error_no_errors_before(self):
         # test data
-        date = datetime.now()
-        expected = {
-            'timestamp': date,
-            'message': 'Could not access the StarbaseList API',
-            'script': 'loadPos',
-            'corpId': 123456
-        }
+        expected = {'corpId': 123456, 'corpName': 'Test Corp', 'failCount': 1}
 
         # mocking
-        insert_patcher = mock.patch.object(MongoProvider, 'insert')
-        insert_patched = insert_patcher.start()
-        date_patcher = mock.patch.object(self.sut, 'date_now', return_value=date)
-        date_patched = date_patcher.start()
         find_method = mock.patch.object(MongoProvider, 'find_one',
                                         return_value={'corpId': 123456, 'corpName': 'Test Corp'}).start()
         update_method = mock.patch.object(self.sut, 'update_corp').start()
@@ -162,11 +167,28 @@ class TestPosParser(unittest.TestCase):
         self.sut.handle_error(expected['corpId'])
 
         # verify
-        self.assertEqual(insert_patched.call_count, 1)
-        insert_patched.assert_called_with('error_log', expected)
-        self.assertEqual(date_patched.call_count, 2)
         self.assertEqual(find_method.call_count, 1)
         self.assertEqual(update_method.call_count, 1)
+        update_method.assert_called_with(expected)
+        self.assertEqual(notify_method.call_count, 1)
+
+    def test_handle_error_with_errors_before(self):
+        # test data
+        expected = {'corpId': 123456, 'corpName': 'Test Corp', 'failCount': 3}
+
+        # mocking
+        find_method = mock.patch.object(MongoProvider, 'find_one',
+                                        return_value={'corpId': 123456, 'corpName': 'Test Corp', 'failCount': 2}).start()
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+        notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
+
+        # run
+        self.sut.handle_error(expected['corpId'])
+
+        # verify
+        self.assertEqual(find_method.call_count, 1)
+        self.assertEqual(update_method.call_count, 1)
+        update_method.assert_called_with(expected)
         self.assertEqual(notify_method.call_count, 1)
 
 

@@ -49,7 +49,7 @@ class PosParser:
         return result
 
     def process_corp(self, corp, existing_poses, new_poses):
-        if 'failedAt' not in corp:
+        if 'failCount' not in corp or corp['failCount'] <= 3:
             print("loading poses for corp " + corp['corpName'])
             corp_poses = self.load_for_corp(corp['key'], corp['vCode'], corp['corpId'], existing_poses)
             if len(corp_poses) > 0:
@@ -106,25 +106,18 @@ class PosParser:
 
     def handle_error(self, corp_id):
         print("Could not access the pos api for corpId " + str(corp_id))
-        post = {
-            'timestamp': self.date_now(),
-            'message': 'Could not access the StarbaseList API',
-            'script': 'loadPos',
-            'corpId': corp_id
-        }
-        MongoProvider().insert('error_log', post)
 
         corp = MongoProvider().find_one('corporations', {'corpId': corp_id})
-        corp['failedAt'] = self.date_now()
+        if 'failCount' in corp:
+            corp['failCount'] += 1
+        else:
+            corp['failCount'] = 1
         self.update_corp(corp)
 
         self.notify_aws_sns('EVE_POS_SNS_ERROR', 'Error parsing API for %s' % corp['corpName'])
 
     def update_corp(self, corp):
         MongoProvider().provide().get_collection('corporations').replace_one({'corpId': corp['corpId']}, corp)
-
-    def date_now(self):
-        return datetime.now()
 
     def get_starbase_list(self, key_id, v_code):
         return ApiWrapper(self.endpoint, key_id, v_code).call(None)

@@ -64,7 +64,7 @@ class PosParser:
 
     def load_for_corp(self, corp, existing_poses):
         poses = []
-        api_result = self.get_starbase_list(corp['keyId'], corp['vCode'])
+        api_result = self.get_starbase_list(corp['key'], corp['vCode'])
         if api_result is None:
             self.handle_error(corp['corpId'])
             return []

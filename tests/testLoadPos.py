@@ -72,7 +72,7 @@ class TestPosParser(unittest.TestCase):
         process_patched = process_patcher.start()
 
         # run
-        corp = {'keyId': 1, 'vCode': 'v', 'corpId': 2}
+        corp = {'key': 1, 'vCode': 'v', 'corpId': 2}
         self.sut.load_for_corp(corp, existing_poses=[])
 
         # verify
@@ -97,7 +97,7 @@ class TestPosParser(unittest.TestCase):
         reset_method = mock.patch.object(self.sut, 'reset_fail_count').start()
 
         # run
-        corp = {'keyId': 1, 'vCode': 'v', 'corpId': 2}
+        corp = {'key': 1, 'vCode': 'v', 'corpId': 2}
         self.sut.load_for_corp(corp, existing_poses=empty_pos_list)
 
         # verify

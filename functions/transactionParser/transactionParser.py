@@ -22,7 +22,7 @@ class TransactionParser:
         print("loading corporations ...")
         for corp in MongoProvider().find('corporations'):
             print("processing corp %s" % corp['corpName'])
-            if 'failedAt' not in corp:
+            if 'failCount' not in corp or corp['failCount'] <= 3:
                 self.process_corp(corp['key'], corp['vCode'], corp['corpId'])
             else:
                 print("The corp %s has previously failed and will not be parsed." % corp['corpName'])
@@ -75,16 +75,12 @@ class TransactionParser:
 
     def handle_error(self, corp_id):
         print("Could not access the wallet api for corpId " + str(corp_id))
-        post = {
-            'timestamp': self.date_now(),
-            'message': 'Could not access the WalletJournal API',
-            'script': 'loadTransactions',
-            'corpId': corp_id
-        }
-        MongoProvider().insert('error_log', post)
 
         corp = MongoProvider().find_one('corporations', {'corpId': corp_id})
-        corp['failedAt'] = self.date_now()
+        if 'failCount' in corp:
+            corp['failCount'] += 1
+        else:
+            corp['failCount'] = 1
         self.update_corp(corp)
 
         self.notify_aws_sns('EVE_POS_SNS_ERROR', 'Error parsing API for %s' % corp['corpName'])

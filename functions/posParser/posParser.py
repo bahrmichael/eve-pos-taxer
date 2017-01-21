@@ -117,11 +117,13 @@ class PosParser:
         corp = MongoProvider().find_one('corporations', {'corpId': corp_id})
         if 'failCount' in corp:
             corp['failCount'] += 1
+            if corp['failCount'] > 3:
+                self.notify_aws_sns('EVE_POS_SNS_ERROR', 'Error parsing API for %s' % corp['corpName'])
         else:
             corp['failCount'] = 1
         self.update_corp(corp)
 
-        self.notify_aws_sns('EVE_POS_SNS_ERROR', 'Error parsing API for %s' % corp['corpName'])
+
 
     def update_corp(self, corp):
         MongoProvider().provide().get_collection('corporations').replace_one({'corpId': corp['corpId']}, corp)

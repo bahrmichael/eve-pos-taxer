@@ -165,7 +165,6 @@ class TestPosParser(unittest.TestCase):
         find_method = mock.patch.object(MongoProvider, 'find_one',
                                         return_value={'corpId': 123456, 'corpName': 'Test Corp'}).start()
         update_method = mock.patch.object(self.sut, 'update_corp').start()
-        notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 
         # run
         self.sut.handle_error(expected['corpId'])
@@ -174,7 +173,6 @@ class TestPosParser(unittest.TestCase):
         self.assertEqual(find_method.call_count, 1)
         self.assertEqual(update_method.call_count, 1)
         update_method.assert_called_with(expected)
-        self.assertEqual(notify_method.call_count, 1)
 
     def test_handle_error_with_errors_before(self):
         # test data
@@ -183,6 +181,23 @@ class TestPosParser(unittest.TestCase):
         # mocking
         find_method = mock.patch.object(MongoProvider, 'find_one',
                                         return_value={'corpId': 123456, 'corpName': 'Test Corp', 'failCount': 2}).start()
+        update_method = mock.patch.object(self.sut, 'update_corp').start()
+
+        # run
+        self.sut.handle_error(expected['corpId'])
+
+        # verify
+        self.assertEqual(find_method.call_count, 1)
+        self.assertEqual(update_method.call_count, 1)
+        update_method.assert_called_with(expected)
+
+    def test_handle_error_with_enough_errors_for_notification(self):
+        # test data
+        expected = {'corpId': 123456, 'corpName': 'Test Corp', 'failCount': 4}
+
+        # mocking
+        find_method = mock.patch.object(MongoProvider, 'find_one',
+                                        return_value={'corpId': 123456, 'corpName': 'Test Corp', 'failCount': 3}).start()
         update_method = mock.patch.object(self.sut, 'update_corp').start()
         notify_method = mock.patch.object(self.sut, 'notify_aws_sns').start()
 

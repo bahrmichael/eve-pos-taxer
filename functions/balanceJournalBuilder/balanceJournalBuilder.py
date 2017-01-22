@@ -37,7 +37,11 @@ class BalanceJournalBuilder:
 
     def get_corp_name(self,corp_id, mongo_client):
         result = mongo_client.corporations.find_one({'corpId': corp_id})
-        return result['corpName']
+        print(corp_id)
+        if result:
+            return result['corpName']
+        else:
+            return "n/a"
 
     def has_entry_for_date(self,corp_data, date):
         for balanceEntry in corp_data:
@@ -122,3 +126,6 @@ class BalanceJournalBuilder:
             bulk.execute()
         except BulkWriteError as bwe:
             pprint(bwe.details)
+
+if __name__ == "__main__":
+    BalanceJournalBuilder().main()

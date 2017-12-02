@@ -1,3 +1,7 @@
+# DEPRECATED
+
+The tooling does not fulfill its task anymore, as the game mechanics have changed. As the XML APIs will be shut down in 2018, the tool will eventually fully break.
+
 # Eve Pos Taxer
 
 [ ![Codeship Status for bahrmichael/eve-pos-taxer](https://codeship.com/projects/0b42a360-b955-0134-447f-7a5b9e1f9d50/status?branch=master)](https://codeship.com/projects/194949)
